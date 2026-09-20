@@ -1,0 +1,340 @@
+[
+  {
+    "id": "services_collection",
+    "name": "services",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "name": "category",
+        "type": "select",
+        "required": true,
+        "options": {
+          "maxSelect": 1,
+          "values": ["emergency", "pharmacy", "health", "artisan", "municipal", "transport", "commerce"]
+        }
+      },
+      {
+        "name": "name_ar",
+        "type": "text",
+        "required": true
+      },
+      {
+        "name": "name_fr",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "name_en",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "trade_ar",
+        "type": "text",
+        "required": true
+      },
+      {
+        "name": "trade_fr",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "trade_en",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "phone",
+        "type": "text",
+        "required": true
+      },
+      {
+        "name": "secondary_phone",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "whatsapp",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "address_ar",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "address_fr",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "address_en",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "neighborhood_ar",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "neighborhood_fr",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "neighborhood_en",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "is_24_7",
+        "type": "bool",
+        "required": false
+      },
+      {
+        "name": "is_open_now",
+        "type": "bool",
+        "required": false
+      },
+      {
+        "name": "is_emergency",
+        "type": "bool",
+        "required": false
+      },
+      {
+        "name": "is_guard_pharmacy",
+        "type": "bool",
+        "required": false
+      },
+      {
+        "name": "rating",
+        "type": "number",
+        "required": false
+      },
+      {
+        "name": "reviews_count",
+        "type": "number",
+        "required": false
+      },
+      {
+        "name": "verified",
+        "type": "bool",
+        "required": false
+      },
+      {
+        "name": "description_ar",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "description_fr",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "description_en",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "working_hours_ar",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "working_hours_fr",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "working_hours_en",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "map_query",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "is_user_submitted",
+        "type": "bool",
+        "required": false
+      },
+      {
+        "name": "status",
+        "type": "select",
+        "required": false,
+        "options": {
+          "maxSelect": 1,
+          "values": ["pending", "approved", "rejected"]
+        }
+      },
+      {
+        "name": "image",
+        "type": "file",
+        "required": false,
+        "options": {
+          "maxSelect": 1,
+          "maxSize": 5242880,
+          "mimeTypes": ["image/jpeg", "image/png", "image/webp"]
+        }
+      }
+    ],
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "",
+    "updateRule": null,
+    "deleteRule": null
+  },
+  {
+    "id": "advertisements_collection",
+    "name": "advertisements",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "name": "title_ar",
+        "type": "text",
+        "required": true
+      },
+      {
+        "name": "title_fr",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "title_en",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "subtitle_ar",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "subtitle_fr",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "subtitle_en",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "description_ar",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "description_fr",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "description_en",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "category",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "badge_ar",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "badge_fr",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "badge_en",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "phone",
+        "type": "text",
+        "required": true
+      },
+      {
+        "name": "whatsapp",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "link",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "image_url",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "bg_gradient",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "featured",
+        "type": "bool",
+        "required": false
+      },
+      {
+        "name": "is_approved",
+        "type": "bool",
+        "required": false
+      },
+      {
+        "name": "status",
+        "type": "select",
+        "required": false,
+        "options": {
+          "maxSelect": 1,
+          "values": ["pending", "approved", "rejected"]
+        }
+      },
+      {
+        "name": "applicant_name",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "duration",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false
+      },
+      {
+        "name": "image",
+        "type": "file",
+        "required": false,
+        "options": {
+          "maxSelect": 1,
+          "maxSize": 5242880,
+          "mimeTypes": ["image/jpeg", "image/png", "image/webp"]
+        }
+      }
+    ],
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "",
+    "updateRule": null,
+    "deleteRule": null
+  }
+]
