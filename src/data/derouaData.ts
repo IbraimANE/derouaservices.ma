@@ -789,69 +789,7 @@ export const INITIAL_SERVICES: ServiceItem[] = [
 
 ];
 
-export const DEROUA_NOTICES: NoticeItem[] = [
-  {
-    id: 'not-1',
-    type: 'pharmacy_duty',
-    title: {
-      ar: 'صيدلية الحراسة للأسبوع الجاري بالدروة',
-      fr: 'Pharmacie de garde de la semaine à Deroua',
-      en: 'Guard Pharmacy of the week in Deroua'
-    },
-    content: {
-      ar: 'تؤمن صيدلية "الوفاق" (بشارع محمد السادس، تجزئة الوفاق) الحراسة الليلية والنهارية طيلة هذا الأسبوع لخدمة الساكنة على مدار 24 ساعة.',
-      fr: 'La pharmacie "Al Wifaq" (Avenue Mohammed VI) assure la garde jour et nuit 24h/24 pour toute cette semaine.',
-      en: 'Al Wifaq Pharmacy (Mohammed VI Ave) provides 24/7 guard duty throughout this week.'
-    },
-    date: '2026-09-15',
-    isUrgent: true,
-    author: {
-      ar: 'نقابة صيادلة الدروة والنواحي',
-      fr: 'Syndicat des Pharmaciens de Deroua',
-      en: 'Deroua Pharmacists Syndicate'
-    }
-  },
-  {
-    id: 'not-2',
-    type: 'municipal',
-    title: {
-      ar: 'حملة إدارية لتسهيل تصحيح الإمضاءات وبطاقات الرميد / التغطية الصحية',
-      fr: 'Permanence spéciale légalisation & AMO solidaire',
-      en: 'Special municipal desk for AMO healthcare'
-    },
-    content: {
-      ar: 'تعلن جماعة الدروة عن فتح شبابيك إضافية بمصلحة تصحيح الإمضاءات ومكتب الحالة المدنية لتسريع معالجة ملفات المواطنين.',
-      fr: 'La Commune de Deroua ouvre des guichets supplémentaires pour accélérer les démarches administratives et la légalisation.',
-      en: 'Deroua municipality opens extra counters to accelerate civil documentation and legalizations.'
-    },
-    date: '2026-09-14',
-    author: {
-      ar: 'جماعة الدروة',
-      fr: 'Commune Urbaine de Deroua',
-      en: 'Deroua Municipality'
-    }
-  },
-  {
-    id: 'not-3',
-    type: 'utility',
-    title: {
-      ar: 'أشغال صيانة دورية لشبكة الماء الصالح للشرب',
-      fr: 'Maintenance préventive du réseau d\'eau potable',
-      en: 'Water network preventive maintenance'
-    },
-    content: {
-      ar: 'ينهي المكتب الوطني للماء إلى علم ساكنة حي الأمل وحي الوفاق أنه سيتم إجراء أشغال صيانة ليلية لن تتجاوز ساعتين فجر الخميس.',
-      fr: 'L\'ONEE informe les habitants de Hay Al Amal et Al Wifaq d\'une intervention nocturne d\'entretien sans interruption majeure.',
-      en: 'ONEE informs residents of Al Amal and Al Wifaq of scheduled nighttime maintenance.'
-    },
-    date: '2026-09-12',
-    author: {
-      ar: 'ONEE قطاع الماء',
-      fr: 'ONEE Branche Eau',
-      en: 'ONEE Water'
-    }
-  }
-];
+export const DEROUA_NOTICES: NoticeItem[] = [];
 
 export const TRANSPORT_ROUTES: TransportRoute[] = [
   {
