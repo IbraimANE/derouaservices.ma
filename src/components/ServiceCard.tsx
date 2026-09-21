@@ -19,6 +19,7 @@ import {
   ShoppingBag
 } from 'lucide-react';
 import { ServiceItem, ServiceCategory } from '../types.ts';
+import { whatsappNumber } from '../lib/servicePolicy';
 import { useApp } from '../context/AppContext.tsx';
 
 interface ServiceCardProps {
@@ -58,8 +59,8 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
   const Icon = getCategoryIcon(service.category);
   const isFav = isFavorite(service.id);
 
-  const handleCopyPhone = () => {
-    navigator.clipboard.writeText(service.phone);
+  const handleCopyPhone = async () => {
+    try { await navigator.clipboard.writeText(service.phone); } catch { showToast(language === 'ar' ? 'تعذر نسخ الرقم.' : 'Copy failed.'); return; }
     setCopied(true);
     showToast(t.numberCopied);
     setTimeout(() => setCopied(false), 2000);
@@ -201,14 +202,14 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
           className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold transition-all shadow-xs active:scale-98"
         >
           <Phone className="w-3.5 h-3.5" />
-          <span>{service.phone}</span>
+          <span dir="ltr">{service.phone}</span>
         </a>
 
         {/* WhatsApp Button */}
         {service.whatsapp && (
           <a
             id={`wa-btn-${service.id}`}
-            href={`https://wa.me/${service.whatsapp}`}
+            href={`https://wa.me/${whatsappNumber(service.whatsapp)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="p-2 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-800 dark:bg-emerald-950/60 dark:hover:bg-emerald-900 dark:text-emerald-300 transition-colors"

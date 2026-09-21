@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Megaphone, Send, CheckCircle2, MessageSquare, Phone, Building, Calendar, Image as ImageIcon, Link as LinkIcon } from 'lucide-react';
 import { useApp } from '../context/AppContext.tsx';
 
@@ -14,8 +14,10 @@ export const AdInquiryModal: React.FC = () => {
   const [imageFile, setImageFile] = useState<File | undefined>(undefined);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
+  useEffect(() => () => { if (imagePreview) URL.revokeObjectURL(imagePreview); }, [imagePreview]);
   if (!isAdInquiryModalOpen) return null;
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,6 +39,8 @@ export const AdInquiryModal: React.FC = () => {
       return;
     }
 
+    if (isSubmitting) return;
+    setSubmitError('');
     setIsSubmitting(true);
     try {
       await submitAdInquiry({
@@ -52,7 +56,7 @@ export const AdInquiryModal: React.FC = () => {
 
       setSubmitted(true);
     } catch {
-      showToast(language === 'ar' ? 'حدث خطأ أثناء إرسال الطلب' : 'Erreur lors de l\'envoi');
+      setSubmitError(language === 'ar' ? 'لم يتم إرسال الطلب. احتفظنا ببيانات النموذج؛ تحقق من الاتصال وأعد المحاولة.' : language === 'fr' ? 'Demande non envoyée. Vos données sont conservées; réessayez.' : 'Request was not sent. Your form is preserved; check your connection and retry.');
     } finally {
       setIsSubmitting(false);
     }
@@ -165,6 +169,7 @@ export const AdInquiryModal: React.FC = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
+            {submitError && <p role="alert" className="text-red-600">{submitError}</p>}
             {/* Quick Admin Contact Bar */}
             <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 flex items-center justify-between flex-wrap gap-2 text-xs">
               <div className="flex items-center gap-2">

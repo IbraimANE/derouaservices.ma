@@ -45,8 +45,8 @@ export const PrivacyPolicyModal: React.FC = () => {
               </p>
               <p className="text-[11px] opacity-90">
                 {language === 'ar'
-                  ? 'تم تصميم هذا الموقع الإلكتروني لخدمة ساكنة مدينة الدروة وزوارها. الموقع لا يجمع ولا يشارك أي بيانات شخصية سرية أو حساسة مع أي طرف ثالث.'
-                  : 'Ce portail web est conçu pour les habitants et usagers de Deroua. Aucune donnée personnelle sensible n\'est vendue ou partagée avec des tiers.'}
+                  ? 'تم تصميم هذا الموقع الإلكتروني لخدمة ساكنة مدينة الدروة وزوارها. تُرسل بيانات نماذج الخدمات والإعلانات إلى Firebase لمراجعتها وإدارتها. لا تُدرج معلومات حساسة في الوصف أو الملاحظات.'
+                  : 'Ce portail web est conçu pour les habitants et usagers de Deroua. Les formulaires sont transmis à Firebase pour modération. N\'incluez pas de données sensibles dans les descriptions.'}
               </p>
             </div>
           </div>
@@ -58,8 +58,8 @@ export const PrivacyPolicyModal: React.FC = () => {
             </h4>
             <p className="text-xs">
               {language === 'ar'
-                ? 'يتم تخزين تفضيلات اللغة، والمظهر الليلي، وقائمة الأرقام المحفوظة في المفضلة، والخدمات المضافة محلياً داخل ذاكرة متصفح جهازكم فقط، دون إرسالها إلى أي خوادم خارجية.'
-                : 'Vos préférences (langue, mode sombre, favoris, services ajoutés) sont enregistrées localement sur votre appareil via le stockage sécurisé du navigateur/système.'}
+                ? 'يتم تخزين تفضيلات اللغة، والمظهر الليلي، وقائمة الأرقام المحفوظة في المفضلة داخل متصفحكم. تُرسل الطلبات والأسماء وأرقام التواصل والصور المختارة إلى Firebase، وتُنشر بيانات النشاط أو الإعلان بعد الموافقة. قد يُنشأ حساب تقني مجهول لإرسال الطلبات. يستخدم الموقع Google Fonts وAdSense، وقد تعالج هذه الخدمات بيانات الاتصال وملفات الارتباط وفق إعداداتها. روابط واتساب والخرائط تفتح خدمات خارجية.'
+                : 'Les préférences restent dans le navigateur. Les demandes, contacts et images sont transmis à Firebase via un compte technique anonyme si nécessaire. Les informations approuvées sont publiques. Google Fonts et AdSense peuvent traiter des données de connexion et des cookies. WhatsApp et Maps sont des services externes.'}
             </p>
           </div>
 
@@ -82,13 +82,13 @@ export const PrivacyPolicyModal: React.FC = () => {
             </h4>
             <p className="text-xs">
               {language === 'ar'
-                ? 'يتم تدقيق أرقام الطوارئ وصيدليات الحراسة والإدارات العمومية بمدينة الدروة بانتظام لضمان فعاليتها وتقديم خدمة موثوقة للمواطنين.'
-                : 'Les coordonnées des services d\'urgence, pharmacies de garde et administrations de Deroua sont régulièrement vérifiées pour garantir leur exactitude.'}
+                ? 'تُعرض حراسة الصيدلية فقط عند توفر فترة سارية ومصدر. اتصل بالخدمة للتحقق من المعلومات والمواعيد قبل التوجه، ويمكن طلب تصحيح البيانات عبر إدارة الموقع.'
+                : 'Une garde n\'est affichée qu\'avec une période valide et une source. Confirmez les coordonnées et horaires avant de vous déplacer; contactez la gestion du site pour les corriger.'}
             </p>
           </div>
 
           <div className="pt-2 text-[11px] text-slate-400">
-            <span>{language === 'ar' ? 'آخر تحديث: 15 شتنبر 2026 • الدروة، المملكة المغربية' : 'Dernière mise à jour: 15 Septembre 2026 • Deroua, Maroc'}</span>
+            <span>{language === 'ar' ? 'آخر تحديث: 21 شتنبر 2026 • الدروة، المملكة المغربية' : 'Dernière mise à jour: 21 Septembre 2026 • Deroua, Maroc'}</span>
           </div>
         </div>
 

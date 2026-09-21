@@ -1,0 +1,26 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function admin() {
+      return request.auth != null && request.auth.token.admin == true;
+    }
+    match /ads/{ownerUid}/{adId}/image {
+      function owner() {
+        return request.auth != null && request.auth.uid == ownerUid;
+      }
+      function published() {
+        return firestore.exists(/databases/(default)/documents/advertisements/$(adId)) &&
+          firestore.get(/databases/(default)/documents/advertisements/$(adId)).data.status == 'approved' &&
+          firestore.get(/databases/(default)/documents/advertisements/$(adId)).data.isApproved == true;
+      }
+      allow read: if admin() || owner() || published();
+      allow create: if owner() && request.resource.size <= 5 * 1024 * 1024 &&
+        request.resource.contentType.matches('image/(jpeg|png|webp)');
+      allow update: if false;
+      allow delete: if admin() || (owner() && !firestore.exists(/databases/(default)/documents/advertisements/$(adId)));
+    }
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

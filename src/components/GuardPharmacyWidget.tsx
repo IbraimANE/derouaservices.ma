@@ -9,6 +9,7 @@ import {
   Check, 
   Navigation 
 } from 'lucide-react';
+import { isCurrentGuardPharmacy, whatsappNumber } from '../lib/servicePolicy';
 import { useApp } from '../context/AppContext.tsx';
 
 export const GuardPharmacyWidget: React.FC = () => {
@@ -16,12 +17,14 @@ export const GuardPharmacyWidget: React.FC = () => {
   const [copied, setCopied] = React.useState(false);
 
   // Find active guard pharmacy
-  const guardPharmacy = services.find(s => s.isGuardPharmacy) || services.find(s => s.category === 'pharmacy');
+  const guardPharmacy = services.find(s => isCurrentGuardPharmacy(s));
 
-  if (!guardPharmacy) return null;
+  if (!guardPharmacy) return <section className="p-5 rounded-2xl border bg-amber-50 text-amber-950" role="status">
+    {language === 'ar' ? 'لا تتوفر لدينا حراسة صيدلية مؤكدة لهذا الوقت. تحقق من جدول الحراسة المحلي قبل التوجه.' : language === 'fr' ? 'Aucune pharmacie de garde confirmée pour cette période. Vérifiez le tableau local avant de vous déplacer.' : 'No confirmed duty pharmacy for this time. Check the local duty roster before travelling.'}
+  </section>;
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(guardPharmacy.phone);
+  const handleCopy = async () => {
+    try { await navigator.clipboard.writeText(guardPharmacy.phone); } catch { showToast(language === 'ar' ? 'تعذر نسخ الرقم.' : 'Copy failed.'); return; }
     setCopied(true);
     showToast(t.numberCopied);
     setTimeout(() => setCopied(false), 2000);
@@ -79,7 +82,8 @@ export const GuardPharmacyWidget: React.FC = () => {
           </div>
 
           <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 max-w-2xl">
-            {guardPharmacy.description?.[language]}
+            {guardPharmacy.guardSource}<br />
+            {new Date(guardPharmacy.guardStartsAt!).toLocaleString(language)} — {new Date(guardPharmacy.guardEndsAt!).toLocaleString(language)}
           </p>
         </div>
 
@@ -99,7 +103,7 @@ export const GuardPharmacyWidget: React.FC = () => {
           {guardPharmacy.whatsapp && (
             <a
               id="guard-pharmacy-whatsapp-btn"
-              href={`https://wa.me/${guardPharmacy.whatsapp}`}
+              href={`https://wa.me/${whatsappNumber(guardPharmacy.whatsapp)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center p-2.5 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-800 dark:bg-emerald-900/50 dark:hover:bg-emerald-800 dark:text-emerald-200 transition-colors"

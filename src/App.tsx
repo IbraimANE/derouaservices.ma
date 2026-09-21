@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { useApp } from './context/AppContext.tsx';
 import { Header } from './components/Header.tsx';
 import { PortalHero } from './components/PortalHero.tsx';
@@ -11,7 +11,7 @@ import { NoticeBoard } from './components/NoticeBoard.tsx';
 import { AddServiceModal } from './components/AddServiceModal.tsx';
 import { PrivacyPolicyModal } from './components/PrivacyPolicyModal.tsx';
 import { AboutWebsiteModal } from './components/AboutWebsiteModal.tsx';
-import { AdminModal } from './components/AdminModal.tsx';
+const AdminModal = lazy(() => import('./components/AdminModal').then(module => ({ default: module.AdminModal })));
 import { AdBannerSection } from './components/AdBannerSection.tsx';
 import { AdInquiryModal } from './components/AdInquiryModal.tsx';
 import { Footer } from './components/Footer.tsx';
@@ -30,6 +30,7 @@ export const App: React.FC = () => {
     toastMessage, 
     setIsAddModalOpen, 
     isAboutModalOpen,
+    isAdminModalOpen,
     setIsAboutModalOpen,
     selectedCategory,
     isFavoritesView,
@@ -44,6 +45,8 @@ export const App: React.FC = () => {
       {toastMessage && (
         <div 
           id="toast-notification"
+          role="status"
+          aria-live="polite"
           className="fixed bottom-20 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-full bg-slate-900/90 text-white dark:bg-white/95 dark:text-slate-900 text-xs font-semibold shadow-lg backdrop-blur-xs flex items-center gap-2 animate-in fade-in slide-in-from-bottom-3 duration-200"
         >
           <CheckCircle2 className="w-4 h-4 text-emerald-400 dark:text-emerald-600 shrink-0" />
@@ -86,7 +89,7 @@ export const App: React.FC = () => {
               }`}
             >
               <Building2 className="w-4 h-4" />
-              <span>{language === 'ar' ? 'دليل الخدمات' : 'Annuaire des services'}</span>
+              <span>{language === 'ar' ? 'دليل الخدمات' : language === 'fr' ? 'Annuaire des services' : 'Service directory'}</span>
             </button>
 
             <button
@@ -167,7 +170,7 @@ export const App: React.FC = () => {
         isOpen={isAboutModalOpen} 
         onClose={() => setIsAboutModalOpen(false)} 
       />
-      <AdminModal />
+      <Suspense fallback={<p role="status">…</p>}>{isAdminModalOpen && <AdminModal />}</Suspense>
       <AdInquiryModal />
     </div>
   );

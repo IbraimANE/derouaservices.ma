@@ -31,6 +31,7 @@ import {
   EyeOff
 } from 'lucide-react';
 import { useApp } from '../context/AppContext.tsx';
+import { GuardDutyEditor } from './GuardDutyEditor';
 import { ServiceCategory } from '../types.ts';
 
 export const AdminModal: React.FC = () => {
@@ -41,7 +42,7 @@ export const AdminModal: React.FC = () => {
     isAdminAuthenticated, 
     loginAdmin, 
     logoutAdmin, 
-    services, 
+    allRawServices: services, 
     toggleVerification, 
     markAsVerified,
     deleteService,
@@ -54,6 +55,9 @@ export const AdminModal: React.FC = () => {
     addAdvertisement
   } = useApp();
 
+  const [emailInput, setEmailInput] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [savingAd, setSavingAd] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
   const [authError, setAuthError] = useState(false);
 
@@ -85,15 +89,15 @@ export const AdminModal: React.FC = () => {
   const [newAdBadge, setNewAdBadge] = useState('');
   const [newAdPublishInstantly, setNewAdPublishInstantly] = useState(true);
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = loginAdmin(passwordInput);
-    if (!success) {
-      setAuthError(true);
-    } else {
-      setAuthError(false);
-      setPasswordInput('');
-    }
+    if (loginLoading) return;
+    setLoginLoading(true);
+    setAuthError(false);
+    const success = await loginAdmin(emailInput, passwordInput);
+    setAuthError(!success);
+    setPasswordInput('');
+    setLoginLoading(false);
   };
 
   // Filter services for Directory table
@@ -165,8 +169,8 @@ export const AdminModal: React.FC = () => {
 
   // Advertisements Statistics & Filtering
   const totalAdsCount = advertisements.length;
-  const approvedAdsCount = advertisements.filter(a => a.isApproved === true || a.status === 'approved').length;
-  const pendingAdsCount = advertisements.filter(a => !a.isApproved && a.status !== 'approved').length;
+  const approvedAdsCount = advertisements.filter(a => a.isApproved === true && a.status === 'approved').length;
+  const pendingAdsCount = advertisements.filter(a => a.status === 'pending').length;
 
   const filteredAdvertisements = useMemo(() => {
     return advertisements.filter(ad => {
@@ -190,14 +194,17 @@ export const AdminModal: React.FC = () => {
     });
   }, [advertisements, adSearch, adFilterStatus]);
 
-  const handleCreateAdByAdmin = (e: React.FormEvent) => {
+  const handleCreateAdByAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newAdTitle.trim() || !newAdPhone.trim()) {
       showToast(language === 'ar' ? 'يرجى إدخال اسم النشاط ورقم الهاتف' : 'Veuillez remplir le nom et le téléphone');
       return;
     }
 
-    addAdvertisement({
+    if (savingAd) return;
+    setSavingAd(true);
+    try {
+    await addAdvertisement({
       title: {
         ar: newAdTitle.trim(),
         fr: newAdTitle.trim(),
@@ -235,6 +242,10 @@ export const AdminModal: React.FC = () => {
     setNewAdWhatsapp('');
     setNewAdBadge('');
     setIsAddingNewAd(false);
+    showToast(language === 'ar' ? 'تم حفظ الإعلان في قاعدة البيانات.' : 'Annonce enregistrée.');
+    } catch {
+      showToast(language === 'ar' ? 'تعذر حفظ الإعلان. لم تُمسح بيانات النموذج؛ أعد المحاولة.' : 'Échec : les données du formulaire sont conservées.');
+    } finally { setSavingAd(false); }
   };
 
   const exportServicesJson = () => {
@@ -346,6 +357,7 @@ export const AdminModal: React.FC = () => {
           </div>
         </div>
 
+        {isAdminAuthenticated && <GuardDutyEditor />}
         {/* Content Body */}
         {!isAdminAuthenticated ? (
           /* Login Form Gate */
@@ -366,9 +378,16 @@ export const AdminModal: React.FC = () => {
             </div>
 
             <form onSubmit={handleLoginSubmit} className="w-full space-y-3">
+              <label htmlFor="admin-email-input" className="block text-sm">{language === 'ar' ? 'البريد الإلكتروني' : 'Email'}</label>
+              <input id="admin-email-input" type="email" autoComplete="username" required
+                value={emailInput} onChange={e => setEmailInput(e.target.value)} dir="ltr"
+                className="w-full p-3 border rounded-xl bg-white text-slate-900" />
+              <label htmlFor="admin-password-input" className="block text-sm">{language === 'ar' ? 'كلمة المرور' : 'Password'}</label>
               <div className="relative">
                 <input
                   id="admin-password-input"
+                  autoComplete="current-password"
+                  required
                   type="password"
                   value={passwordInput}
                   onChange={(e) => {
@@ -383,12 +402,13 @@ export const AdminModal: React.FC = () => {
 
               {authError && (
                 <p className="text-xs text-rose-500 font-semibold">
-                  {language === 'ar' ? 'كلمة المرور غير صحيحة، يرجى المحاولة ثانية' : 'Mot de passe incorrect'}
+                  {language === 'ar' ? 'تعذر الدخول. تحقق من بيانات الحساب وصلاحية المشرف والاتصال.' : 'Connexion refusée. Vérifiez le compte, le rôle administrateur et la connexion.'}
                 </p>
               )}
 
               <button
                 id="admin-submit-login-btn"
+                  disabled={loginLoading}
                 type="submit"
                 className="w-full py-3 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-sm transition-all shadow-md active:scale-98 flex items-center justify-center gap-2"
               >
@@ -1292,7 +1312,7 @@ export const AdminModal: React.FC = () => {
                       </button>
                     </div>
 
-                    <form onSubmit={handleCreateAdByAdmin} className="space-y-4">
+                    <form onSubmit={handleCreateAdByAdmin} className="space-y-4" aria-busy={savingAd}>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">

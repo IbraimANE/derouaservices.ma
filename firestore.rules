@@ -1,0 +1,68 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function admin() {
+      return request.auth != null && request.auth.token.admin == true;
+    }
+    function localized(value) {
+      return value is map && value.keys().hasAll(['ar', 'fr', 'en']) &&
+        value.keys().hasOnly(['ar', 'fr', 'en']) &&
+        value.ar is string && value.fr is string && value.en is string &&
+        value.ar.size() <= 4000 && value.fr.size() <= 4000 && value.en.size() <= 4000;
+    }
+    function optionalText(data, field, maxSize) {
+      return !(field in data) || (data[field] is string && data[field].size() <= maxSize);
+    }
+    function submission(data) {
+      return request.auth != null && data.ownerUid == request.auth.uid &&
+        data.status == 'pending' && data.createdAt == request.time &&
+        data.phone is string && data.phone.size() >= 3 && data.phone.size() <= 25;
+    }
+    match /services/{id} {
+      allow read: if admin() || (resource.data.status == 'approved' && resource.data.verified == true);
+      allow create: if submission(request.resource.data) &&
+        request.resource.data.keys().hasOnly([
+          'category', 'name', 'tradeOrRole', 'phone', 'whatsapp', 'address', 'neighborhood',
+          'description', 'workingHours', 'is24_7', 'isOpenNow', 'isUserSubmitted',
+          'verified', 'status', 'ownerUid', 'createdAt'
+        ]) &&
+        request.resource.data.verified == false && request.resource.data.isUserSubmitted == true &&
+        request.resource.data.isOpenNow == false && request.resource.data.is24_7 is bool &&
+        request.resource.data.category in ['emergency', 'pharmacy', 'health', 'artisan', 'municipal', 'transport', 'commerce'] &&
+        localized(request.resource.data.name) && request.resource.data.name.ar.size() > 0 &&
+        localized(request.resource.data.tradeOrRole) &&
+        localized(request.resource.data.address) && localized(request.resource.data.neighborhood) &&
+        (!('description' in request.resource.data) || localized(request.resource.data.description)) &&
+        (!('workingHours' in request.resource.data) || localized(request.resource.data.workingHours)) &&
+        optionalText(request.resource.data, 'whatsapp', 25);
+      allow update, delete: if admin();
+    }
+    match /advertisements/{id} {
+      allow read: if admin() || (resource.data.status == 'approved' && resource.data.isApproved == true);
+      allow create: if submission(request.resource.data) &&
+        request.resource.data.keys().hasOnly([
+          'title', 'subtitle', 'description', 'category', 'phone', 'whatsapp', 'link', 'imageUrl',
+          'applicantName', 'duration', 'notes', 'status', 'isApproved', 'ownerUid', 'createdAt',
+          'badge', 'bgGradient', 'featured'
+        ]) &&
+        request.resource.data.isApproved == false &&
+        (!('badge' in request.resource.data) || (admin() && localized(request.resource.data.badge))) &&
+        (!('bgGradient' in request.resource.data) || (admin() && optionalText(request.resource.data, 'bgGradient', 200))) &&
+        (!('featured' in request.resource.data) || (admin() && request.resource.data.featured is bool)) &&
+        localized(request.resource.data.title) && request.resource.data.title.ar.size() > 0 &&
+        localized(request.resource.data.subtitle) && localized(request.resource.data.description) &&
+        request.resource.data.category is string && request.resource.data.category.size() <= 100 &&
+        optionalText(request.resource.data, 'whatsapp', 25) &&
+        optionalText(request.resource.data, 'applicantName', 200) &&
+        optionalText(request.resource.data, 'duration', 100) &&
+        optionalText(request.resource.data, 'notes', 4000) &&
+        optionalText(request.resource.data, 'imageUrl', 2048) &&
+        optionalText(request.resource.data, 'link', 2048) &&
+        (!('link' in request.resource.data) || request.resource.data.link.matches('https?://.*'));
+      allow update, delete: if admin();
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

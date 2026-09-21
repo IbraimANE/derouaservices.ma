@@ -30,6 +30,11 @@ export interface ServiceItem {
   isOpenNow?: boolean;
   isEmergency?: boolean;
   isGuardPharmacy?: boolean;
+  guardStartsAt?: string;
+  guardEndsAt?: string;
+  guardSource?: string;
+  guardVerifiedAt?: string;
+  status?: 'pending' | 'approved' | 'rejected';
   rating?: number;
   reviewsCount?: number;
   verified: boolean;

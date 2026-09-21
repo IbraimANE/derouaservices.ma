@@ -1,8 +1,0 @@
-{
-  "name": "Deroua Services",
-  "description": "Local directory and community services portal for Deroua (خدمات الدروة). Access emergency numbers, pharmacies on duty, municipal administration, transport, and verified local artisans.",
-  "requestFramePermissions": [],
-  "majorCapabilities": [
-    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
-  ]
-}

@@ -131,14 +131,14 @@ export const INITIAL_SERVICES: ServiceItem[] = [
     id: 'ph-1',
     category: 'pharmacy',
     name: {
-      ar: 'صيدلية الوفاق (حراسة هذا الأسبوع)',
-      fr: 'Pharmacie Al Wifaq (De Garde)',
-      en: 'Al Wifaq Pharmacy (On Duty)'
+      ar: 'صيدلية الوفاق',
+      fr: 'Pharmacie Al Wifaq',
+      en: 'Al Wifaq Pharmacy'
     },
     tradeOrRole: {
-      ar: 'صيدلية حراسة ليلية ونهارية',
-      fr: 'Pharmacie de garde',
-      en: 'Guard Pharmacy'
+      ar: 'صيدلية',
+      fr: 'Pharmacie',
+      en: 'Pharmacy'
     },
     phone: '0522532411',
     whatsapp: '212660123456',
@@ -152,18 +152,18 @@ export const INITIAL_SERVICES: ServiceItem[] = [
       fr: 'Hay Al Wifaq',
       en: 'Al Wifaq'
     },
-    is24_7: true,
-    isOpenNow: true,
-    isGuardPharmacy: true,
+    is24_7: false,
+    isOpenNow: false,
+    isGuardPharmacy: false,
     rating: 4.8,
     reviewsCount: 34,
     verified: true,
     description: {
-      ar: 'صيدلية الحراسة الرسمية المقررة لهذا الأسبوع بالدروة. أدوية، مستلزمات طبية، وقياس الضغط والسكر.',
-      fr: 'Pharmacie de garde officielle pour cette semaine à Deroua. Médicaments et matériel médical.',
-      en: 'Official on-duty pharmacy for this week in Deroua. Full medication and medical supplies.'
+      ar: 'أدوية، مستلزمات طبية، وقياس الضغط والسكر.',
+      fr: 'Médicaments et matériel médical.',
+      en: 'Full medication and medical supplies.'
     },
-    workingHours: { ar: 'حراسة ليلية ونهارية مفتوح الآن', fr: 'Garde 24h/24 ouverte', en: 'Guard duty 24/7 open' },
+    workingHours: { ar: 'اتصل للتحقق من المواعيد', fr: 'Appelez pour confirmer les horaires', en: 'Call to confirm opening hours' },
     mapQuery: 'Pharmacie Al Wifaq Deroua'
   },
   {
