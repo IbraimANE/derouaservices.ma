@@ -2,7 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs, updateDoc, deleteDoc, doc, query, where, serverTimestamp, setDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { getAuth, getIdTokenResult, signInAnonymously } from 'firebase/auth';
-import type { ServiceItem, AdvertisementItem } from '../types';
+import type { ServiceItem, AdvertisementItem, JobOffer } from '../types';
 import { safeWebUrl, whatsappNumber, withoutUndefined } from './servicePolicy';
 
 const app = initializeApp({
@@ -116,5 +116,15 @@ export const advertisementsApi = {
   async delete(id: string): Promise<void> {
     await requireAdmin();
     await deleteDoc(doc(db, 'advertisements', id));
+  }
+};
+
+export const jobsApi = {
+  async getAll(admin = false): Promise<JobOffer[]> {
+    if (admin) await requireAdmin();
+    const source = collection(db, 'jobs');
+    const q = admin ? query(source) : query(source, where('isActive', '==', true));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(record => ({ ...record.data(), id: record.id } as JobOffer));
   }
 };
