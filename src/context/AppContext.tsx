@@ -165,7 +165,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setAdvertisements([]);
       setJobs([]);
       try {
-        const admin = !!user && (await getIdTokenResult(user)).claims.admin === true;
+        const admin = !!user && await hasAdminRole();
         if (!active || current !== revision) return;
         setAdminAuthenticated(admin);
         await refreshData();
@@ -215,7 +215,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const loginAdmin = async (email: string, password: string) => {
     try {
       const credential = await signInWithEmailAndPassword(auth, email.trim(), password);
-      if ((await getIdTokenResult(credential.user, true)).claims.admin !== true) {
+      await getIdTokenResult(credential.user, true);
+      if (!await hasAdminRole()) {
         await signOut(auth);
         return false;
       }
