@@ -134,14 +134,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsSyncing(true);
     try {
       const admin = await hasAdminRole();
-      const [servicesResult, adsResult, jobsResult] = await Promise.all([
+      const [servicesResult, adsResult, jobsResult] = await Promise.allSettled([
         servicesApi.getAll(admin), advertisementsApi.getAll(admin),
-        (jobsApi?.getAll?.(admin) ?? Promise.resolve([])).catch(() => [])
+        jobsApi?.getAll?.(admin) ?? Promise.resolve([])
       ]);
       if (version !== requestVersion.current) return;
-      setRemoteServices(servicesResult);
-      setAdvertisements(adsResult);
-      setJobs(jobsResult);
+      if (servicesResult.status === 'fulfilled') setRemoteServices(servicesResult.value);
+      if (adsResult.status === 'fulfilled') setAdvertisements(adsResult.value);
+      if (jobsResult.status === 'fulfilled') setJobs(jobsResult.value);
     } catch {
       if (version !== requestVersion.current) return;
       showToast({
