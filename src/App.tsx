@@ -8,6 +8,7 @@ import { CategoryNav } from './components/CategoryNav.tsx';
 import { ServiceList } from './components/ServiceList.tsx';
 import { TransportGuide } from './components/TransportGuide.tsx';
 import { NoticeBoard } from './components/NoticeBoard.tsx';
+import { JobBoard } from './components/JobBoard.tsx';
 import { AddServiceModal } from './components/AddServiceModal.tsx';
 import { PrivacyPolicyModal } from './components/PrivacyPolicyModal.tsx';
 import { AboutWebsiteModal } from './components/AboutWebsiteModal.tsx';
@@ -18,7 +19,7 @@ import { Footer } from './components/Footer.tsx';
 import { 
   Building2, 
   Car, 
-  Bell, 
+  Bell, Briefcase,
   Plus, 
   CheckCircle2 
 } from 'lucide-react';
@@ -37,7 +38,7 @@ export const App: React.FC = () => {
     searchQuery
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'directory' | 'transport' | 'notices'>('directory');
+  const [activeTab, setActiveTab] = useState<'directory' | 'transport' | 'notices' | 'jobs'>('directory');
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
@@ -119,6 +120,15 @@ export const App: React.FC = () => {
               <Bell className="w-4 h-4" />
               <span>{t.noticeBoardTitle}</span>
             </button>
+            <button
+              id="tab-jobs-btn"
+              type="button"
+              onClick={() => setActiveTab('jobs')}
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${activeTab === 'jobs' ? 'bg-slate-900 text-white dark:bg-sky-600 shadow-xs' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900'}`}
+            >
+              <Briefcase className="w-4 h-4" />
+              <span>{t.jobsTitle}</span>
+            </button>
           </div>
         </div>
 
@@ -144,6 +154,8 @@ export const App: React.FC = () => {
             <NoticeBoard />
           </div>
         )}
+
+        {activeTab === 'jobs' && <JobBoard />}
 
         {/* Dedicated Advertising Space & Local Partners at Bottom of Website */}
         <AdBannerSection />
