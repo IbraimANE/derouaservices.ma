@@ -22,6 +22,7 @@ export const AddServiceModal: React.FC = () => {
   const [address, setAddress] = useState('');
   const [description, setDescription] = useState('');
   const [is247, setIs247] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isAddModalOpen) return null;
@@ -30,6 +31,8 @@ export const AddServiceModal: React.FC = () => {
     e.preventDefault();
     if (!name.trim() || !phone.trim() || !trade.trim()) return;
 
+    if (isSubmitting) return;
+    setSubmitError('');
     setIsSubmitting(true);
     try {
       await addService({
@@ -49,7 +52,7 @@ export const AddServiceModal: React.FC = () => {
           en: neighborhood 
         },
         is24_7: is247,
-        isOpenNow: true,
+        isOpenNow: false,
         verified: false,
         description: {
           ar: description.trim() || 'خدمة مسجلة في دليل الدروة',
@@ -72,6 +75,8 @@ export const AddServiceModal: React.FC = () => {
       setAddress('');
       setDescription('');
       setIs247(false);
+    } catch {
+      setSubmitError(language === 'ar' ? 'تعذر إرسال النشاط. بياناتك ما زالت في النموذج؛ تحقق من الاتصال وأعد المحاولة.' : language === 'fr' ? 'Envoi impossible. Vos données sont conservées dans le formulaire. Réessayez.' : 'Submission failed. Your form is preserved; check your connection and retry.');
     } finally {
       setIsSubmitting(false);
     }
@@ -109,6 +114,7 @@ export const AddServiceModal: React.FC = () => {
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-5 overflow-y-auto space-y-4 text-xs sm:text-sm">
+          {submitError && <p role="alert" className="text-red-600">{submitError}</p>}
           {/* Name */}
           <div>
             <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">

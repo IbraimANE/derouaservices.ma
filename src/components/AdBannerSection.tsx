@@ -11,6 +11,7 @@ import {
   Utensils,
   Wrench
 } from 'lucide-react';
+import { whatsappNumber } from '../lib/servicePolicy';
 import { useApp } from '../context/AppContext.tsx';
 import { AdvertisementItem } from '../types.ts';
 
@@ -32,7 +33,7 @@ export const AdBannerSection: React.FC = () => {
         ? `السلام عليكم، تواصلت معكم بخصوص إعلانكم المنشور على موقع خدمات الدروة (${title})`
         : `Bonjour, je vous contacte suite à votre annonce sur le portail Deroua Services (${title})`
     );
-    window.open(`https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${text}`, '_blank');
+    window.open(`https://wa.me/${whatsappNumber(phone)}?text=${text}`, '_blank');
   };
 
   return (

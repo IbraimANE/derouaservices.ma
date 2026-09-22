@@ -1,4 +1,4 @@
-import { ServiceItem, NoticeItem, TransportRoute, JobOffer } from '../types.ts';
+import { ServiceItem, NoticeItem, TransportRoute } from '../types.ts';
 
 export const DEROUA_NEIGHBORHOODS = [
   { id: 'all', ar: 'كل الأحياء', fr: 'Tous les quartiers', en: 'All neighborhoods' },
@@ -131,14 +131,14 @@ export const INITIAL_SERVICES: ServiceItem[] = [
     id: 'ph-1',
     category: 'pharmacy',
     name: {
-      ar: 'صيدلية الوفاق (حراسة هذا الأسبوع)',
-      fr: 'Pharmacie Al Wifaq (De Garde)',
-      en: 'Al Wifaq Pharmacy (On Duty)'
+      ar: 'صيدلية الوفاق',
+      fr: 'Pharmacie Al Wifaq',
+      en: 'Al Wifaq Pharmacy'
     },
     tradeOrRole: {
-      ar: 'صيدلية حراسة ليلية ونهارية',
-      fr: 'Pharmacie de garde',
-      en: 'Guard Pharmacy'
+      ar: 'صيدلية',
+      fr: 'Pharmacie',
+      en: 'Pharmacy'
     },
     phone: '0522532411',
     whatsapp: '212660123456',
@@ -152,18 +152,18 @@ export const INITIAL_SERVICES: ServiceItem[] = [
       fr: 'Hay Al Wifaq',
       en: 'Al Wifaq'
     },
-    is24_7: true,
-    isOpenNow: true,
-    isGuardPharmacy: true,
+    is24_7: false,
+    isOpenNow: false,
+    isGuardPharmacy: false,
     rating: 4.8,
     reviewsCount: 34,
     verified: true,
     description: {
-      ar: 'صيدلية الحراسة الرسمية المقررة لهذا الأسبوع بالدروة. أدوية، مستلزمات طبية، وقياس الضغط والسكر.',
-      fr: 'Pharmacie de garde officielle pour cette semaine à Deroua. Médicaments et matériel médical.',
-      en: 'Official on-duty pharmacy for this week in Deroua. Full medication and medical supplies.'
+      ar: 'أدوية، مستلزمات طبية، وقياس الضغط والسكر.',
+      fr: 'Médicaments et matériel médical.',
+      en: 'Full medication and medical supplies.'
     },
-    workingHours: { ar: 'حراسة ليلية ونهارية مفتوح الآن', fr: 'Garde 24h/24 ouverte', en: 'Guard duty 24/7 open' },
+    workingHours: { ar: 'اتصل للتحقق من المواعيد', fr: 'Appelez pour confirmer les horaires', en: 'Call to confirm opening hours' },
     mapQuery: 'Pharmacie Al Wifaq Deroua'
   },
   {
@@ -247,7 +247,6 @@ export const INITIAL_SERVICES: ServiceItem[] = [
       en: 'Pharmacy'
     },
     phone: '0522534590',
-    whatsapp: '212661987654',
     address: {
       ar: 'شارع النصر، إقامة النسيم، الدروة',
       fr: 'Avenue Annasr, Résidence Annassim',
@@ -263,106 +262,7 @@ export const INITIAL_SERVICES: ServiceItem[] = [
     rating: 4.5,
     reviewsCount: 15,
     verified: true,
-    workingHours: { ar: '09:00 - 21:00', fr: '09:00 - 21:00', en: '09:00 - 21:00' },
-    mapQuery: 'Pharmacie An-Nassim Deroua'
-  },
-  {
-    id: 'ph-5',
-    category: 'pharmacy',
-    name: {
-      ar: 'صيدلية جنان الدروة',
-      fr: 'Pharmacie Jnane Deroua',
-      en: 'Jnane Deroua Pharmacy'
-    },
-    tradeOrRole: {
-      ar: 'صيدلية',
-      fr: 'Pharmacie',
-      en: 'Pharmacy'
-    },
-    phone: '0522537820',
-    whatsapp: '212672345678',
-    address: {
-      ar: 'تجزئة جنان الدروة، الشطر 2 رقم 88',
-      fr: 'Lotissement Jnane Deroua, Tranche 2 N°88',
-      en: 'Jnane Deroua Lot, Phase 2 No. 88'
-    },
-    neighborhood: {
-      ar: 'جنان الدروة',
-      fr: 'Jnane Deroua',
-      en: 'Jnane Deroua'
-    },
-    is24_7: false,
-    isOpenNow: true,
-    rating: 4.9,
-    reviewsCount: 22,
-    verified: true,
-    workingHours: { ar: '08:30 - 21:30', fr: '08:30 - 21:30', en: '08:30 - 21:30' },
-    mapQuery: 'Pharmacie Jnane Deroua'
-  },
-  {
-    id: 'ph-6',
-    category: 'pharmacy',
-    name: {
-      ar: 'صيدلية القصبة',
-      fr: 'Pharmacie Al Kasbah',
-      en: 'Al Kasbah Pharmacy'
-    },
-    tradeOrRole: {
-      ar: 'صيدلية',
-      fr: 'Pharmacie',
-      en: 'Pharmacy'
-    },
-    phone: '0522533310',
-    address: {
-      ar: 'حي القصبة، قرب المسجد الكبير، الدروة',
-      fr: 'Hay Al Kasbah, près de la Grande Mosquée',
-      en: 'Al Kasbah, near Grand Mosque'
-    },
-    neighborhood: {
-      ar: 'حي القصبة',
-      fr: 'Hay Kasbah',
-      en: 'Kasbah'
-    },
-    is24_7: false,
-    isOpenNow: true,
-    rating: 4.6,
-    reviewsCount: 18,
-    verified: true,
-    workingHours: { ar: '09:00 - 21:00', fr: '09:00 - 21:00', en: '09:00 - 21:00' },
-    mapQuery: 'Pharmacie Al Kasbah Deroua'
-  },
-  {
-    id: 'ph-7',
-    category: 'pharmacy',
-    name: {
-      ar: 'صيدلية السعادة',
-      fr: 'Pharmacie Saada',
-      en: 'Saada Pharmacy'
-    },
-    tradeOrRole: {
-      ar: 'صيدلية',
-      fr: 'Pharmacie',
-      en: 'Pharmacy'
-    },
-    phone: '0522538112',
-    whatsapp: '212663456789',
-    address: {
-      ar: 'شارع بئر أنزران، تجزئة السعادة، الدروة',
-      fr: 'Bd Bir Anzarane, Lotissement Saada',
-      en: 'Bir Anzarane Blvd, Saada'
-    },
-    neighborhood: {
-      ar: 'حي السعادة',
-      fr: 'Hay Saada',
-      en: 'Saada'
-    },
-    is24_7: false,
-    isOpenNow: true,
-    rating: 4.8,
-    reviewsCount: 26,
-    verified: true,
-    workingHours: { ar: '08:30 - 22:00', fr: '08:30 - 22:00', en: '08:30 - 22:00' },
-    mapQuery: 'Pharmacie Saada Deroua'
+    workingHours: { ar: '09:00 - 21:00', fr: '09:00 - 21:00', en: '09:00 - 21:00' }
   },
 
   // Healthcare
@@ -891,9 +791,6 @@ export const INITIAL_SERVICES: ServiceItem[] = [
 
 export const DEROUA_NOTICES: NoticeItem[] = [];
 
-export const INITIAL_JOB_OFFERS: JobOffer[] = [];
-
-
 export const TRANSPORT_ROUTES: TransportRoute[] = [
   {
     id: 'rt-1',
@@ -964,8 +861,7 @@ export const APP_TRANSLATIONS = {
     filterByNeighborhood: 'تصفية حسب الحي',
     emergencyNumbersQuick: 'أرقام الطوارئ السريعة',
     addServiceBtn: 'إضافة خدمة أو حرفي',
-    noticeBoardTitle: 'مستجدات جماعة الدروة',
-    noticeBoardSubtitle: 'آخر المستجدات والإعلانات الصيدلانية والبلدية لمدينة الدروة',
+    noticeBoardTitle: 'إعلانات وأخبار الدروة',
     transportTitle: 'دليل النقل وسيارات الأجرة',
     privacyPolicy: 'سياسة الخصوصية',
     aboutWebsite: 'حول الموقع',
@@ -987,9 +883,7 @@ export const APP_TRANSLATIONS = {
     grantBadge: 'منح العلامة الزرقاء',
     revokeBadge: 'إلغاء العلامة',
     advertisingSection: 'المساحة الإعلانية والشركاء',
-    advertiseWithUs: 'أعلن معنا في الدروة',
-    jobsTitle: 'فرص وعروض العمل',
-    jobsSubtitle: 'أحدث عروض وفرص الشغل المتاحة بمدينة الدروة والمناطق المجاورة'
+    advertiseWithUs: 'أعلن معنا في الدروة'
   },
   fr: {
     appName: 'Deroua Services',
@@ -1016,8 +910,7 @@ export const APP_TRANSLATIONS = {
     filterByNeighborhood: 'Filtrer par quartier',
     emergencyNumbersQuick: 'Numéros d\'urgence rapides',
     addServiceBtn: 'Ajouter un service',
-    noticeBoardTitle: 'Actualités de la Commune de Deroua',
-    noticeBoardSubtitle: 'Dernières actualités, avis municipaux et informations pharmaceutiques de Deroua',
+    noticeBoardTitle: 'Avis & Actualités de Deroua',
     transportTitle: 'Guide des Transports & Taxis',
     privacyPolicy: 'Politique de confidentialité',
     aboutWebsite: 'À propos du site',
@@ -1039,9 +932,7 @@ export const APP_TRANSLATIONS = {
     grantBadge: 'Attribuer le badge bleu',
     revokeBadge: 'Retirer le badge',
     advertisingSection: 'Espace Publicitaire & Partenaires',
-    advertiseWithUs: 'Annoncez ici à Deroua',
-    jobsTitle: 'Offres d\'Emploi',
-    jobsSubtitle: 'Dernières offres d\'emploi et opportunités professionnelles à Deroua et ses environs'
+    advertiseWithUs: 'Annoncez ici à Deroua'
   },
   en: {
     appName: 'Deroua Services',
@@ -1068,8 +959,7 @@ export const APP_TRANSLATIONS = {
     filterByNeighborhood: 'Filter by neighborhood',
     emergencyNumbersQuick: 'Quick Emergency Numbers',
     addServiceBtn: 'Add a Service',
-    noticeBoardTitle: 'Deroua Commune Updates',
-    noticeBoardSubtitle: 'Latest municipal, community, and pharmaceutical updates for Deroua',
+    noticeBoardTitle: 'Deroua Notices & Community Updates',
     transportTitle: 'Transport & Taxi Guide',
     privacyPolicy: 'Privacy Policy',
     aboutWebsite: 'About Website',
@@ -1091,9 +981,7 @@ export const APP_TRANSLATIONS = {
     grantBadge: 'Grant Blue Badge',
     revokeBadge: 'Revoke Badge',
     advertisingSection: 'Advertising & Local Partners',
-    advertiseWithUs: 'Advertise With Us',
-    jobsTitle: 'Job Offers',
-    jobsSubtitle: 'Latest job vacancies and employment opportunities in Deroua'
+    advertiseWithUs: 'Advertise With Us'
   }
 };
 
@@ -1249,55 +1137,3 @@ export const INITIAL_USER_SUBMISSIONS: ServiceItem[] = [
     workingHours: { ar: '06:00 - 22:30 يومياً', fr: '06:00 - 22:30 7j/7', en: '06:00 - 22:30' }
   }
 ];
-
-export interface GuardScheduleEntry {
-  id: string;
-  weekLabel: { ar: string; fr: string; en: string };
-  dates: { ar: string; fr: string; en: string };
-  pharmacyId: string;
-  pharmacyName: { ar: string; fr: string; en: string };
-  neighborhood: { ar: string; fr: string; en: string };
-  phone: string;
-  isCurrent?: boolean;
-}
-
-export const GUARD_PHARMACY_SCHEDULE: GuardScheduleEntry[] = [
-  {
-    id: 'sched-1',
-    weekLabel: { ar: 'الأسبوع الحالي (حراسة نشطة)', fr: 'Semaine en cours (Active)', en: 'Current Week (Active)' },
-    dates: { ar: 'من 15 إلى 21 شتنبر 2026', fr: 'Du 15 au 21 Septembre 2026', en: 'Sep 15 - Sep 21, 2026' },
-    pharmacyId: 'ph-1',
-    pharmacyName: { ar: 'صيدلية الوفاق', fr: 'Pharmacie Al Wifaq', en: 'Al Wifaq Pharmacy' },
-    neighborhood: { ar: 'حي الوفاق', fr: 'Hay Al Wifaq', en: 'Al Wifaq' },
-    phone: '0522532411',
-    isCurrent: true
-  },
-  {
-    id: 'sched-2',
-    weekLabel: { ar: 'الأسبوع القادم', fr: 'Semaine prochaine', en: 'Next Week' },
-    dates: { ar: 'من 22 إلى 28 شتنبر 2026', fr: 'Du 22 au 28 Septembre 2026', en: 'Sep 22 - Sep 28, 2026' },
-    pharmacyId: 'ph-5',
-    pharmacyName: { ar: 'صيدلية جنان الدروة', fr: 'Pharmacie Jnane Deroua', en: 'Jnane Deroua Pharmacy' },
-    neighborhood: { ar: 'جنان الدروة', fr: 'Jnane Deroua', en: 'Jnane Deroua' },
-    phone: '0522537820'
-  },
-  {
-    id: 'sched-3',
-    weekLabel: { ar: 'الأسبوع الثالث', fr: '3ème Semaine', en: '3rd Week' },
-    dates: { ar: 'من 29 شتنبر إلى 05 أكتوبر 2026', fr: 'Du 29 Sept. au 05 Octobre 2026', en: 'Sep 29 - Oct 05, 2026' },
-    pharmacyId: 'ph-3',
-    pharmacyName: { ar: 'صيدلية الأمل', fr: 'Pharmacie Al Amal', en: 'Al Amal Pharmacy' },
-    neighborhood: { ar: 'حي الأمل', fr: 'Hay Al Amal', en: 'Al Amal' },
-    phone: '0522531280'
-  },
-  {
-    id: 'sched-4',
-    weekLabel: { ar: 'الأسبوع الرابع', fr: '4ème Semaine', en: '4th Week' },
-    dates: { ar: 'من 06 إلى 12 أكتوبر 2026', fr: 'Du 06 au 12 Octobre 2026', en: 'Oct 06 - Oct 12, 2026' },
-    pharmacyId: 'ph-7',
-    pharmacyName: { ar: 'صيدلية السعادة', fr: 'Pharmacie Saada', en: 'Saada Pharmacy' },
-    neighborhood: { ar: 'حي السعادة', fr: 'Hay Saada', en: 'Saada' },
-    phone: '0522538112'
-  }
-];
-

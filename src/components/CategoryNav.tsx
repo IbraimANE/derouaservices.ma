@@ -11,8 +11,7 @@ import {
   Filter,
   CheckCircle2,
   Clock,
-  RotateCcw,
-  MapPin
+  RotateCcw
 } from 'lucide-react';
 import { useApp } from '../context/AppContext.tsx';
 import { ServiceCategory } from '../types.ts';
@@ -153,31 +152,18 @@ export const CategoryNav: React.FC = () => {
           </button>
         </div>
 
-        {/* Actions right side: View on Map & Reset Filters */}
-        <div className="flex items-center gap-2">
-          <a
-            id="jump-to-map-btn"
-            href="#interactive-deroua-map-section"
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:hover:bg-sky-900/80 dark:text-sky-300 border border-sky-200 dark:border-sky-800 font-semibold transition-all shadow-2xs"
-            title={language === 'ar' ? 'عرض مواقع الخدمات على خريطة جوجل' : 'Voir sur la carte'}
+        {/* Reset Filters button if any active */}
+        {hasActiveFilters && (
+          <button
+            id="reset-filters-btn"
+            type="button"
+            onClick={resetAllFilters}
+            className="inline-flex items-center gap-1 px-2 py-1 text-slate-500 hover:text-sky-600 dark:text-slate-400 dark:hover:text-sky-400 transition-colors"
           >
-            <MapPin className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
-            <span>{language === 'ar' ? 'الخريطة' : 'Carte'}</span>
-          </a>
-
-          {/* Reset Filters button if any active */}
-          {hasActiveFilters && (
-            <button
-              id="reset-filters-btn"
-              type="button"
-              onClick={resetAllFilters}
-              className="inline-flex items-center gap-1 px-2 py-1 text-slate-500 hover:text-sky-600 dark:text-slate-400 dark:hover:text-sky-400 transition-colors"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>{t.resetFilters}</span>
-            </button>
-          )}
-        </div>
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>{t.resetFilters}</span>
+          </button>
+        )}
       </div>
     </div>
   );

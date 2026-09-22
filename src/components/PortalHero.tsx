@@ -7,7 +7,6 @@ import {
   PlusCircle, 
   Compass,
   Car,
-  Briefcase,
   Sparkles
 } from 'lucide-react';
 import { Logo } from './Logo.tsx';
@@ -15,13 +14,11 @@ import { Logo } from './Logo.tsx';
 interface PortalHeroProps {
   onExploreDirectory: () => void;
   onExploreTransport: () => void;
-  onExploreJobs?: () => void;
 }
 
 export const PortalHero: React.FC<PortalHeroProps> = ({
   onExploreDirectory,
-  onExploreTransport,
-  onExploreJobs
+  onExploreTransport
 }) => {
   const { language, setIsAddModalOpen, setIsAboutModalOpen } = useApp();
 
@@ -82,18 +79,6 @@ export const PortalHero: React.FC<PortalHeroProps> = ({
               <Car className="w-4 h-4 text-amber-400" />
               <span>{language === 'ar' ? 'المواصلات والطاكسيات' : 'Transports & Taxis'}</span>
             </button>
-
-            {onExploreJobs && (
-              <button
-                id="hero-explore-jobs-btn"
-                type="button"
-                onClick={onExploreJobs}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600/90 hover:bg-indigo-500 text-white text-xs sm:text-sm font-semibold border border-indigo-500/40 transition-all shadow-xs"
-              >
-                <Briefcase className="w-4 h-4 text-indigo-200" />
-                <span>{language === 'ar' ? 'عروض الشغل' : 'Offres d\'emploi'}</span>
-              </button>
-            )}
 
             <button
               id="hero-add-service-btn"

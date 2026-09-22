@@ -28,13 +28,11 @@ import {
   Building2,
   CheckCheck,
   Megaphone,
-  EyeOff,
-  Bell,
-  Briefcase,
-  Tag
+  EyeOff
 } from 'lucide-react';
 import { useApp } from '../context/AppContext.tsx';
-import { ServiceCategory, JobType } from '../types.ts';
+import { GuardDutyEditor } from './GuardDutyEditor';
+import { ServiceCategory } from '../types.ts';
 
 export const AdminModal: React.FC = () => {
   const { 
@@ -42,14 +40,9 @@ export const AdminModal: React.FC = () => {
     isAdminModalOpen, 
     setIsAdminModalOpen, 
     isAdminAuthenticated, 
-    adminUserEmail,
     loginAdmin, 
-    loginWithGoogle,
-    changeAdminPassword,
     logoutAdmin, 
-    services, 
-    activeGuardPharmacyId,
-    setActiveGuardPharmacy,
+    allRawServices: services, 
     toggleVerification, 
     markAsVerified,
     deleteService,
@@ -59,27 +52,17 @@ export const AdminModal: React.FC = () => {
     approveAdvertisement,
     rejectAdvertisement,
     deleteAdvertisement,
-    addAdvertisement,
-    notices,
-    deleteNotice,
-    setIsAddNoticeModalOpen,
-    jobs,
-    addJobOffer,
-    toggleJobStatus,
-    deleteJobOffer
+    addAdvertisement
   } = useApp();
 
+  const [emailInput, setEmailInput] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [savingAd, setSavingAd] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
   const [authError, setAuthError] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Passkey change state
-  const [newKeyInput, setNewKeyInput] = useState('');
-  const [confirmKeyInput, setConfirmKeyInput] = useState('');
-  const [keyChangeStatus, setKeyChangeStatus] = useState<string | null>(null);
-
-  // Primary Tab: 'activity_log' | 'services' | 'advertisements' | 'pharmacies_security' | 'notices' | 'jobs'
-  const [activeTab, setActiveTab] = useState<'activity_log' | 'services' | 'advertisements' | 'pharmacies_security' | 'notices' | 'jobs'>('activity_log');
+  // Primary Tab: 'activity_log' | 'services' | 'advertisements'
+  const [activeTab, setActiveTab] = useState<'activity_log' | 'services' | 'advertisements'>('activity_log');
 
   // Services Directory tab filters
   const [filterType, setFilterType] = useState<'all' | 'verified' | 'unverified' | 'user_submitted'>('all');
@@ -106,60 +89,15 @@ export const AdminModal: React.FC = () => {
   const [newAdBadge, setNewAdBadge] = useState('');
   const [newAdPublishInstantly, setNewAdPublishInstantly] = useState(true);
 
-  // Job Offers tab state & new job form fields
-  const [jobSearch, setJobSearch] = useState('');
-  const [jobTypeFilter, setJobTypeFilter] = useState<string>('all');
-  const [isAddingNewJob, setIsAddingNewJob] = useState(false);
-  const [newJobTitle, setNewJobTitle] = useState('');
-  const [newJobCompany, setNewJobCompany] = useState('');
-  const [newJobSector, setNewJobSector] = useState('');
-  const [newJobType, setNewJobType] = useState<JobType>('full_time');
-  const [newJobLocation, setNewJobLocation] = useState('');
-  const [newJobNeighborhood, setNewJobNeighborhood] = useState('مركز الدروة');
-  const [newJobDescription, setNewJobDescription] = useState('');
-  const [newJobRequirements, setNewJobRequirements] = useState('');
-  const [newJobSalary, setNewJobSalary] = useState('');
-  const [newJobPhone, setNewJobPhone] = useState('');
-  const [newJobWhatsapp, setNewJobWhatsapp] = useState('');
-  const [newJobEmail, setNewJobEmail] = useState('');
-  const [newJobHowToApply, setNewJobHowToApply] = useState('');
-  const [newJobDeadline, setNewJobDeadline] = useState('');
-  const [newJobFeatured, setNewJobFeatured] = useState(false);
-
-
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!passwordInput.trim() || isSubmitting) return;
-    setIsSubmitting(true);
-    const success = await loginAdmin(passwordInput);
-    setIsSubmitting(false);
-    if (!success) {
-      setAuthError(true);
-    } else {
-      setAuthError(false);
-      setPasswordInput('');
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-    await loginWithGoogle();
-    setIsSubmitting(false);
-  };
-
-  const handleChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newKeyInput !== confirmKeyInput) {
-      setKeyChangeStatus(language === 'ar' ? 'كلمات المرور غير متطابقة!' : 'Les mots de passe ne correspondent pas');
-      return;
-    }
-    const ok = await changeAdminPassword(newKeyInput);
-    if (ok) {
-      setKeyChangeStatus(language === 'ar' ? 'تم تحديث الرمز بنجاح!' : 'Mot de passe mis à jour !');
-      setNewKeyInput('');
-      setConfirmKeyInput('');
-    }
+    if (loginLoading) return;
+    setLoginLoading(true);
+    setAuthError(false);
+    const success = await loginAdmin(emailInput, passwordInput);
+    setAuthError(!success);
+    setPasswordInput('');
+    setLoginLoading(false);
   };
 
   // Filter services for Directory table
@@ -231,8 +169,8 @@ export const AdminModal: React.FC = () => {
 
   // Advertisements Statistics & Filtering
   const totalAdsCount = advertisements.length;
-  const approvedAdsCount = advertisements.filter(a => a.isApproved === true || a.status === 'approved').length;
-  const pendingAdsCount = advertisements.filter(a => !a.isApproved && a.status !== 'approved').length;
+  const approvedAdsCount = advertisements.filter(a => a.isApproved === true && a.status === 'approved').length;
+  const pendingAdsCount = advertisements.filter(a => a.status === 'pending').length;
 
   const filteredAdvertisements = useMemo(() => {
     return advertisements.filter(ad => {
@@ -256,14 +194,17 @@ export const AdminModal: React.FC = () => {
     });
   }, [advertisements, adSearch, adFilterStatus]);
 
-  const handleCreateAdByAdmin = (e: React.FormEvent) => {
+  const handleCreateAdByAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newAdTitle.trim() || !newAdPhone.trim()) {
       showToast(language === 'ar' ? 'يرجى إدخال اسم النشاط ورقم الهاتف' : 'Veuillez remplir le nom et le téléphone');
       return;
     }
 
-    addAdvertisement({
+    if (savingAd) return;
+    setSavingAd(true);
+    try {
+    await addAdvertisement({
       title: {
         ar: newAdTitle.trim(),
         fr: newAdTitle.trim(),
@@ -301,101 +242,11 @@ export const AdminModal: React.FC = () => {
     setNewAdWhatsapp('');
     setNewAdBadge('');
     setIsAddingNewAd(false);
+    showToast(language === 'ar' ? 'تم حفظ الإعلان في قاعدة البيانات.' : 'Annonce enregistrée.');
+    } catch {
+      showToast(language === 'ar' ? 'تعذر حفظ الإعلان. لم تُمسح بيانات النموذج؛ أعد المحاولة.' : 'Échec : les données du formulaire sont conservées.');
+    } finally { setSavingAd(false); }
   };
-
-  const filteredJobs = useMemo(() => {
-    return jobs.filter(j => {
-      if (jobSearch.trim()) {
-        const q = jobSearch.toLowerCase();
-        const matchesTitle = (j.title.ar + j.title.fr + j.title.en).toLowerCase().includes(q);
-        const matchesCompany = (j.company.ar + j.company.fr + j.company.en).toLowerCase().includes(q);
-        const matchesSector = (j.sector.ar + j.sector.fr + j.sector.en).toLowerCase().includes(q);
-        if (!matchesTitle && !matchesCompany && !matchesSector) return false;
-      }
-      if (jobTypeFilter !== 'all' && j.jobType !== jobTypeFilter) return false;
-      return true;
-    });
-  }, [jobs, jobSearch, jobTypeFilter]);
-
-  const handleCreateJobByAdmin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newJobTitle.trim() || !newJobCompany.trim()) {
-      showToast(language === 'ar' ? 'يرجى إدخال المسمى الوظيفي واسم الشركة/المشغل' : 'Veuillez saisir l\'intitulé du poste et l\'entreprise');
-      return;
-    }
-
-    await addJobOffer({
-      title: {
-        ar: newJobTitle.trim(),
-        fr: newJobTitle.trim(),
-        en: newJobTitle.trim()
-      },
-      company: {
-        ar: newJobCompany.trim(),
-        fr: newJobCompany.trim(),
-        en: newJobCompany.trim()
-      },
-      sector: {
-        ar: newJobSector.trim() || (language === 'ar' ? 'خدمات عامة' : 'Services généraux'),
-        fr: newJobSector.trim() || 'Services généraux',
-        en: newJobSector.trim() || 'General Services'
-      },
-      jobType: newJobType,
-      location: {
-        ar: newJobLocation.trim() || `${newJobNeighborhood}، الدروة`,
-        fr: newJobLocation.trim() || `${newJobNeighborhood}, Deroua`,
-        en: newJobLocation.trim() || `${newJobNeighborhood}, Deroua`
-      },
-      neighborhood: {
-        ar: newJobNeighborhood,
-        fr: newJobNeighborhood,
-        en: newJobNeighborhood
-      },
-      description: {
-        ar: newJobDescription.trim() || (language === 'ar' ? 'مطلوب موظف(ة) للعمل بمدينة الدروة.' : 'Poste à pourvoir à Deroua.'),
-        fr: newJobDescription.trim() || 'Poste à pourvoir à Deroua.',
-        en: newJobDescription.trim() || 'Position available in Deroua.'
-      },
-      requirements: newJobRequirements.trim() ? {
-        ar: newJobRequirements.trim(),
-        fr: newJobRequirements.trim(),
-        en: newJobRequirements.trim()
-      } : undefined,
-      salary: newJobSalary.trim() ? {
-        ar: newJobSalary.trim(),
-        fr: newJobSalary.trim(),
-        en: newJobSalary.trim()
-      } : undefined,
-      phone: newJobPhone.trim() || undefined,
-      whatsapp: newJobWhatsapp.trim() || (newJobPhone.trim() ? newJobPhone.trim() : undefined),
-      email: newJobEmail.trim() || undefined,
-      howToApply: newJobHowToApply.trim() ? {
-        ar: newJobHowToApply.trim(),
-        fr: newJobHowToApply.trim(),
-        en: newJobHowToApply.trim()
-      } : undefined,
-      deadline: newJobDeadline.trim() || undefined,
-      isActive: true,
-      featured: newJobFeatured
-    });
-
-    // Reset Form
-    setNewJobTitle('');
-    setNewJobCompany('');
-    setNewJobSector('');
-    setNewJobLocation('');
-    setNewJobDescription('');
-    setNewJobRequirements('');
-    setNewJobSalary('');
-    setNewJobPhone('');
-    setNewJobWhatsapp('');
-    setNewJobEmail('');
-    setNewJobHowToApply('');
-    setNewJobDeadline('');
-    setNewJobFeatured(false);
-    setIsAddingNewJob(false);
-  };
-
 
   const exportServicesJson = () => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(services, null, 2));
@@ -506,6 +357,7 @@ export const AdminModal: React.FC = () => {
           </div>
         </div>
 
+        {isAdminAuthenticated && <GuardDutyEditor />}
         {/* Content Body */}
         {!isAdminAuthenticated ? (
           /* Login Form Gate */
@@ -526,104 +378,66 @@ export const AdminModal: React.FC = () => {
             </div>
 
             <form onSubmit={handleLoginSubmit} className="w-full space-y-3">
+              <label htmlFor="admin-email-input" className="block text-sm">{language === 'ar' ? 'البريد الإلكتروني' : 'Email'}</label>
+              <input id="admin-email-input" type="email" autoComplete="username" required
+                value={emailInput} onChange={e => setEmailInput(e.target.value)} dir="ltr"
+                className="w-full p-3 border rounded-xl bg-white text-slate-900" />
+              <label htmlFor="admin-password-input" className="block text-sm">{language === 'ar' ? 'كلمة المرور' : 'Password'}</label>
               <div className="relative">
                 <input
                   id="admin-password-input"
+                  autoComplete="current-password"
+                  required
                   type="password"
                   value={passwordInput}
                   onChange={(e) => {
                     setPasswordInput(e.target.value);
                     setAuthError(false);
                   }}
-                  placeholder={language === 'ar' ? 'أدخل رمز مرور الإدارة...' : 'Mot de passe administrateur...'}
+                  placeholder={language === 'ar' ? 'أدخل كلمة مرور الإدارة...' : 'Mot de passe administrateur...'}
                   className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all text-center tracking-widest font-mono"
                   autoFocus
                 />
               </div>
 
               {authError && (
-                <div className="space-y-2">
-                  <p className="text-xs text-rose-500 font-semibold">
-                    {language === 'ar' ? 'رمز المرور غير صحيح أو تم قفل المحاولات مؤقتاً لحماية النظام' : 'Code incorrect ou accès temporairement bloqué'}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      localStorage.removeItem('deroua_admin_lockout_until_v1');
-                      localStorage.removeItem('deroua_admin_attempts_v1');
-                      setAuthError(false);
-                      setPasswordInput('deroua2026');
-                      await loginAdmin('deroua2026');
-                    }}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold transition-colors cursor-pointer"
-                  >
-                    <Unlock className="w-3.5 h-3.5" />
-                    <span>{language === 'ar' ? 'فك القفل والدخول المباشر (deroua2026)' : 'Débloquer et entrer (deroua2026)'}</span>
-                  </button>
-                </div>
+                <p className="text-xs text-rose-500 font-semibold">
+                  {language === 'ar' ? 'تعذر الدخول. تحقق من بيانات الحساب وصلاحية المشرف والاتصال.' : 'Connexion refusée. Vérifiez le compte, le rôle administrateur et la connexion.'}
+                </p>
               )}
 
               <button
                 id="admin-submit-login-btn"
+                  disabled={loginLoading}
                 type="submit"
-                disabled={isSubmitting}
                 className="w-full py-3 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-sm transition-all shadow-md active:scale-98 flex items-center justify-center gap-2"
               >
                 <Unlock className="w-4 h-4" />
-                <span>
-                  {isSubmitting 
-                    ? (language === 'ar' ? 'جارٍ التحقق...' : 'Vérification...') 
-                    : (language === 'ar' ? 'الدخول إلى لوحة التحكم' : 'Accéder au panneau')}
-                </span>
+                <span>{language === 'ar' ? 'الدخول إلى لوحة التحكم' : 'Accéder au panneau'}</span>
               </button>
 
-              <div className="flex items-center gap-3 my-2 w-full">
-                <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700"></div>
-                <span className="text-xs text-slate-400 font-medium">{language === 'ar' ? 'أو' : 'OU'}</span>
-                <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700"></div>
-              </div>
-
-              <button
-                id="admin-google-login-btn"
-                type="button"
-                onClick={handleGoogleLogin}
-                disabled={isSubmitting}
-                className="w-full py-2.5 px-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2"
-              >
-                <svg className="w-4 h-4" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                </svg>
-                <span>{language === 'ar' ? 'الدخول بحساب Google المشرف' : 'Se connecter avec Google'}</span>
-              </button>
-
-              <div className="pt-2 flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                <span>{language === 'ar' ? 'نظام مشفر ومحمي بآلية منع التخمين' : 'Système sécurisé et chiffré'}</span>
-              </div>
+              {/* Password hint removed for security as requested */}
             </form>
           </div>
         ) : (
           /* Main Admin Workspace with Dedicated Tabs */
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Dedicated Primary Navigation Tabs */}
-            <div className="flex items-center justify-between px-4 sm:px-6 pt-3 bg-slate-100 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 shrink-0 overflow-x-auto no-scrollbar">
+            <div className="flex items-center justify-between px-4 sm:px-6 pt-3 bg-slate-100 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 shrink-0">
               <div className="flex items-center gap-1 sm:gap-2">
-                {/* Tab 1: Activity Logging */}
+                {/* Tab 1: Activity Logging (Dedicated user submissions tab) */}
                 <button
                   id="admin-tab-activity-log"
                   type="button"
                   onClick={() => setActiveTab('activity_log')}
-                  className={`relative pb-3 px-3 sm:px-4 text-xs sm:text-sm font-bold flex items-center gap-2 border-b-2 transition-all whitespace-nowrap ${
+                  className={`relative pb-3 px-3 sm:px-4 text-xs sm:text-sm font-bold flex items-center gap-2 border-b-2 transition-all ${
                     activeTab === 'activity_log'
                       ? 'border-sky-500 text-sky-600 dark:text-sky-400 bg-white/60 dark:bg-slate-800/90 rounded-t-xl shadow-2xs'
                       : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                   }`}
                 >
                   <ClipboardList className="w-4 h-4 text-sky-500" />
-                  <span>{language === 'ar' ? 'سجل الأنشطة' : 'Soumissions'}</span>
+                  <span>{language === 'ar' ? 'سجل الأنشطة والمشاركات' : 'Journal d\'Activité & Soumissions'}</span>
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
                     pendingSubmissionsCount > 0 
                       ? 'bg-amber-500 text-white' 
@@ -644,14 +458,14 @@ export const AdminModal: React.FC = () => {
                   id="admin-tab-services-directory"
                   type="button"
                   onClick={() => setActiveTab('services')}
-                  className={`relative pb-3 px-3 sm:px-4 text-xs sm:text-sm font-bold flex items-center gap-2 border-b-2 transition-all whitespace-nowrap ${
+                  className={`relative pb-3 px-3 sm:px-4 text-xs sm:text-sm font-bold flex items-center gap-2 border-b-2 transition-all ${
                     activeTab === 'services'
                       ? 'border-sky-500 text-sky-600 dark:text-sky-400 bg-white/60 dark:bg-slate-800/90 rounded-t-xl shadow-2xs'
                       : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                   }`}
                 >
                   <Building className="w-4 h-4 text-slate-500" />
-                  <span>{language === 'ar' ? 'دليل الأنشطة العام' : 'Annuaire'}</span>
+                  <span>{language === 'ar' ? 'دليل الأنشطة العام' : 'Annuaire Général des Services'}</span>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
                     {totalCount}
                   </span>
@@ -662,14 +476,14 @@ export const AdminModal: React.FC = () => {
                   id="admin-tab-advertisements"
                   type="button"
                   onClick={() => setActiveTab('advertisements')}
-                  className={`relative pb-3 px-3 sm:px-4 text-xs sm:text-sm font-bold flex items-center gap-2 border-b-2 transition-all whitespace-nowrap ${
+                  className={`relative pb-3 px-3 sm:px-4 text-xs sm:text-sm font-bold flex items-center gap-2 border-b-2 transition-all ${
                     activeTab === 'advertisements'
                       ? 'border-amber-500 text-amber-600 dark:text-amber-400 bg-white/60 dark:bg-slate-800/90 rounded-t-xl shadow-2xs'
                       : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                   }`}
                 >
                   <Megaphone className="w-4 h-4 text-amber-500" />
-                  <span>{language === 'ar' ? 'الإعلانات' : 'Publicités'}</span>
+                  <span>{language === 'ar' ? 'إدارة الإعلانات' : 'Gestion des Publicités'}</span>
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
                     pendingAdsCount > 0 
                       ? 'bg-amber-500 text-white' 
@@ -677,77 +491,18 @@ export const AdminModal: React.FC = () => {
                   }`}>
                     {totalAdsCount}
                   </span>
-                </button>
-
-                {/* Tab 4: Guard Pharmacies & Security */}
-                <button
-                  id="admin-tab-pharmacies-security"
-                  type="button"
-                  onClick={() => setActiveTab('pharmacies_security')}
-                  className={`relative pb-3 px-3 sm:px-4 text-xs sm:text-sm font-bold flex items-center gap-2 border-b-2 transition-all whitespace-nowrap ${
-                    activeTab === 'pharmacies_security'
-                      ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-white/60 dark:bg-slate-800/90 rounded-t-xl shadow-2xs'
-                      : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
-                  }`}
-                >
-                  <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                  <span>{language === 'ar' ? 'صيدليات الحراسة والأمان' : 'Pharmacies de Garde & Sécurité'}</span>
-                </button>
-
-                {/* Tab 5: Commune Updates & Official Notices */}
-                <button
-                  id="admin-tab-notices"
-                  type="button"
-                  onClick={() => setActiveTab('notices')}
-                  className={`relative pb-3 px-3 sm:px-4 text-xs sm:text-sm font-bold flex items-center gap-2 border-b-2 transition-all whitespace-nowrap ${
-                    activeTab === 'notices'
-                      ? 'border-sky-500 text-sky-600 dark:text-sky-400 bg-white/60 dark:bg-slate-800/90 rounded-t-xl shadow-2xs'
-                      : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
-                  }`}
-                >
-                  <Bell className="w-4 h-4 text-sky-500" />
-                  <span>{language === 'ar' ? 'مستجدات جماعة الدروة' : 'Actualités de la Commune'}</span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
-                    {notices.length}
-                  </span>
-                </button>
-
-                {/* Tab 6: Job Offers (فرص وعروض العمل) */}
-                <button
-                  id="admin-tab-jobs"
-                  type="button"
-                  onClick={() => setActiveTab('jobs')}
-                  className={`relative pb-3 px-3 sm:px-4 text-xs sm:text-sm font-bold flex items-center gap-2 border-b-2 transition-all whitespace-nowrap ${
-                    activeTab === 'jobs'
-                      ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400 bg-white/60 dark:bg-slate-800/90 rounded-t-xl shadow-2xs'
-                      : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
-                  }`}
-                >
-                  <Briefcase className="w-4 h-4 text-indigo-500" />
-                  <span>{language === 'ar' ? 'عروض وفرص العمل' : 'Offres d\'Emploi'}</span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">
-                    {jobs.length}
-                  </span>
+                  {pendingAdsCount > 0 && (
+                    <span className="hidden md:inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/70 px-1.5 py-0.5 rounded-md border border-amber-300 dark:border-amber-800">
+                      <Clock className="w-3 h-3" />
+                      <span>{language === 'ar' ? `${pendingAdsCount} بانتظار الموافقة` : `${pendingAdsCount} en attente`}</span>
+                    </span>
+                  )}
                 </button>
               </div>
 
               {/* Quick Actions in Tab Header */}
               <div className="flex items-center gap-2 pb-2">
-                {activeTab === 'jobs' ? (
-                  <button
-                    id="admin-quick-add-job-btn"
-                    type="button"
-                    onClick={() => setIsAddingNewJob(prev => !prev)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-xs"
-                  >
-                    <PlusCircle className="w-3.5 h-3.5" />
-                    <span>
-                      {isAddingNewJob 
-                        ? (language === 'ar' ? 'إغلاق النموذج' : 'Fermer') 
-                        : (language === 'ar' ? 'نشر عرض عمل جديد' : 'Publier une offre')}
-                    </span>
-                  </button>
-                ) : activeTab === 'advertisements' ? (
+                {activeTab === 'advertisements' ? (
                   <button
                     id="admin-quick-add-ad-btn"
                     type="button"
@@ -1557,7 +1312,7 @@ export const AdminModal: React.FC = () => {
                       </button>
                     </div>
 
-                    <form onSubmit={handleCreateAdByAdmin} className="space-y-4">
+                    <form onSubmit={handleCreateAdByAdmin} className="space-y-4" aria-busy={savingAd}>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
@@ -1972,655 +1727,9 @@ export const AdminModal: React.FC = () => {
                 </div>
               </div>
             )}
-
-            {/* TAB 4: Guard Pharmacies Management & Security Center */}
-            {activeTab === 'pharmacies_security' && (
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
-                
-                {/* Section 1: Guard Pharmacy Selector */}
-                <div className="bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-700/60 pb-3">
-                    <div>
-                      <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        <HeartPulse className="w-5 h-5 text-emerald-500" />
-                        <span>{language === 'ar' ? 'تعيين صيدلية الحراسة المناوبة' : 'Pharmacie de Garde en Service'}</span>
-                      </h4>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        {language === 'ar'
-                          ? 'اختر الصيدلية المناوبة لهذا الأسبوع لتحديثها فوراً في الواجهة الرئيسية للموقع وتقديم أرقامها لجميع الزوار.'
-                          : 'Sélectionnez la pharmacie de garde actuelle pour la mettre en avant sur la page d\'accueil.'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {services.filter(s => s.category === 'pharmacy').map(pharmacy => {
-                      const isCurrentActive = pharmacy.id === activeGuardPharmacyId;
-                      return (
-                        <div
-                          key={pharmacy.id}
-                          className={`p-4 rounded-2xl border transition-all flex flex-col justify-between gap-3 ${
-                            isCurrentActive
-                              ? 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-500 shadow-sm'
-                              : 'bg-slate-50/60 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 hover:border-slate-300'
-                          }`}
-                        >
-                          <div>
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="font-bold text-slate-900 dark:text-white text-sm">
-                                {pharmacy.name[language] || pharmacy.name.ar}
-                              </span>
-                              {isCurrentActive && (
-                                <span className="px-2.5 py-0.5 rounded-full bg-emerald-600 text-white text-[11px] font-bold shadow-xs">
-                                  {language === 'ar' ? 'مناوبة نشطة' : 'En service'}
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                              {pharmacy.address[language] || pharmacy.address.ar} • {pharmacy.neighborhood[language] || pharmacy.neighborhood.ar}
-                            </p>
-                            <p className="text-xs text-emerald-700 dark:text-emerald-400 font-mono mt-1">
-                              📞 {pharmacy.phone}
-                            </p>
-                          </div>
-
-                          <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between">
-                            <span className="text-[11px] text-slate-400">
-                              {pharmacy.workingHours?.[language] || '24h/24'}
-                            </span>
-                            {isCurrentActive ? (
-                              <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
-                                <Check className="w-3.5 h-3.5" />
-                                <span>{language === 'ar' ? 'معتمدة حالياً' : 'Actuelle'}</span>
-                              </span>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => setActiveGuardPharmacy(pharmacy.id)}
-                                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-all active:scale-95"
-                              >
-                                {language === 'ar' ? 'تعيين كحراسة حالية' : 'Activer comme garde'}
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Section 2: Security & Password Management */}
-                <div className="bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-700/60 pb-3">
-                    <div>
-                      <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        <ShieldCheck className="w-5 h-5 text-sky-500" />
-                        <span>{language === 'ar' ? 'أمان لوحة التحكم وتغيير مفتاح الدخول' : 'Sécurité & Modification du mot de passe'}</span>
-                      </h4>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        {language === 'ar'
-                          ? 'تحديث وتشفير مفتاح الدخول للإدارة وفق معيار Salted SHA-256.'
-                          : 'Mettre à jour le mot de passe maître chiffré en SHA-256 avec sel.'}
-                      </p>
-                    </div>
-
-                    {adminUserEmail && (
-                      <div className="px-3 py-1 rounded-xl bg-sky-50 dark:bg-sky-950/50 border border-sky-200 dark:border-sky-800 text-sky-800 dark:text-sky-300 text-xs font-mono">
-                        {adminUserEmail}
-                      </div>
-                    )}
-                  </div>
-
-                  <form onSubmit={handleChangePassword} className="space-y-3 max-w-md">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        {language === 'ar' ? 'مفتاح الإدارة الجديد (6 خانات على الأقل)' : 'Nouveau mot de passe (min 6 caractères)'}
-                      </label>
-                      <input
-                        type="password"
-                        value={newKeyInput}
-                        onChange={(e) => setNewKeyInput(e.target.value)}
-                        placeholder="••••••••"
-                        className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        {language === 'ar' ? 'تأكيد المفتاح الجديد' : 'Confirmer le mot de passe'}
-                      </label>
-                      <input
-                        type="password"
-                        value={confirmKeyInput}
-                        onChange={(e) => setConfirmKeyInput(e.target.value)}
-                        placeholder="••••••••"
-                        className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500"
-                        required
-                      />
-                    </div>
-
-                    {keyChangeStatus && (
-                      <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                        {keyChangeStatus}
-                      </p>
-                    )}
-
-                    <button
-                      type="submit"
-                      className="px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
-                    >
-                      {language === 'ar' ? 'حفظ وتشفير الرمز الجديد' : 'Enregistrer le nouveau code'}
-                    </button>
-                  </form>
-
-                  {/* Security Highlights */}
-                  <div className="mt-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700/60 text-xs text-slate-600 dark:text-slate-300 space-y-1.5">
-                    <div className="font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
-                      <Lock className="w-4 h-4 text-emerald-500" />
-                      <span>{language === 'ar' ? 'تدابير الحماية المطبقة في النظام:' : 'Mesures de sécurité actives :'}</span>
-                    </div>
-                    <p>• {language === 'ar' ? 'تشفير كلمات المرور عبر Salted SHA-256 لمنع الهجمات الموجهة وجداول Rainbow Tables.' : 'Chiffrement Salted SHA-256 pour prévenir les attaques par dictionnaire.'}</p>
-                    <p>• {language === 'ar' ? 'قفل تلقائي لمحاولات تسجيل الدخول لمدة 10 دقائق بعد 5 محاولات خاطئة لمنع هجمات التخمين (Brute-Force).' : 'Verrouillage automatique de 10 min après 5 tentatives infructueuses (anti brute-force).'}</p>
-                    <p>• {language === 'ar' ? 'دعم المصادقة المباشرة عبر حساب Google للمشرفين المعتمدين.' : 'Support de l\'authentification officielle Google pour administrateurs autorisés.'}</p>
-                  </div>
-                </div>
-
-              </div>
-            )}
-
-            {/* Tab 5 Content: Commune Updates & Notices Management */}
-            {activeTab === 'notices' && (
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
-                {/* Header Banner with Commune Logo */}
-                <div className="bg-gradient-to-r from-sky-900 via-sky-800 to-indigo-900 rounded-2xl p-5 text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
-                  <div className="flex items-center gap-3.5 text-center sm:text-right">
-                    <div className="w-14 h-14 rounded-2xl bg-white/10 p-1 border border-white/20 shrink-0">
-                      <img 
-                        src="/logo-commune-deroua-01-1.webp" 
-                        alt="شعار جماعة الدروة"
-                        className="w-full h-full object-contain"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = '/logo-commune-deroua.jpg';
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <h3 className="text-base sm:text-lg font-bold">
-                        {language === 'ar' ? 'إدارة مستجدات وإعلانات جماعة الدروة' : 'Gestion des Actualités de la Commune'}
-                      </h3>
-                      <p className="text-xs text-sky-200 mt-0.5">
-                        {language === 'ar'
-                          ? 'نشر وتحديث وحذف البلاغات البلدية، صيدليات الحراسة والإعلانات الموجهة للساكنة.'
-                          : 'Publication, mise à jour et suppression des avis municipaux et pharmaceutiques.'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setIsAddNoticeModalOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-sky-900 hover:bg-sky-50 font-bold text-xs shadow-md transition-all active:scale-95 whitespace-nowrap"
-                  >
-                    <PlusCircle className="w-4 h-4 text-sky-700" />
-                    <span>{language === 'ar' ? 'إنشاء مستجد جديد الآن' : 'Nouveau communiqué'}</span>
-                  </button>
-                </div>
-
-                {/* Notices List */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                      <Bell className="w-4 h-4 text-sky-600" />
-                      <span>{language === 'ar' ? 'قائمة المستجدات المنشورة حالياً' : 'Publications en ligne'}</span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold">
-                        {notices.length}
-                      </span>
-                    </h4>
-                  </div>
-
-                  {notices.length === 0 ? (
-                    <div className="py-12 px-4 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50/50 dark:bg-slate-900/40">
-                      <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-sky-50 dark:bg-sky-950/40 border border-sky-100 dark:border-sky-900/50 flex items-center justify-center text-sky-600 dark:text-sky-400">
-                        <Bell className="w-6 h-6 opacity-60" />
-                      </div>
-                      <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
-                        {language === 'ar' ? 'لا توجد مستجدات منشورة حالياً' : 'Aucune actualité publiée'}
-                      </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto mb-4">
-                        {language === 'ar'
-                          ? 'يمكنك إنشاء أول إعلان صيدلاني أو بلاغ لجماعة الدروة بالنقر على الزر أدناه.'
-                          : 'Publiez le premier avis communal ou tour de garde en cliquant ci-dessous.'}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => setIsAddNoticeModalOpen(true)}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-sky-600 hover:bg-sky-700 transition-colors shadow-xs"
-                      >
-                        <PlusCircle className="w-4 h-4" />
-                        <span>{language === 'ar' ? 'إضافة أول مستجد' : 'Ajouter une actualité'}</span>
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {notices.map((n) => (
-                        <div
-                          key={n.id}
-                          className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/60 shadow-2xs flex flex-col sm:flex-row sm:items-start justify-between gap-3"
-                        >
-                          <div className="space-y-1 flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300">
-                                {n.type === 'pharmacy_duty' ? (language === 'ar' ? 'صيدلية حراسة' : 'Pharmacie') : (language === 'ar' ? 'بلدي' : 'Municipal')}
-                              </span>
-                              {n.isUrgent && (
-                                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                                  {language === 'ar' ? 'عاجل' : 'Urgent'}
-                                </span>
-                              )}
-                              <span className="text-[11px] text-slate-400 font-medium">
-                                {n.date}
-                              </span>
-                            </div>
-                            <h5 className="text-sm font-bold text-slate-900 dark:text-white">
-                              {n.title[language] || n.title.ar || n.title.fr}
-                            </h5>
-                            <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2">
-                              {n.content[language] || n.content.ar || n.content.fr}
-                            </p>
-                            <div className="text-[11px] text-slate-400 pt-1">
-                              {language === 'ar' ? `المصدر: ${n.author[language] || n.author.ar}` : `Source: ${n.author[language] || n.author.fr}`}
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2 shrink-0 self-end sm:self-start">
-                            <button
-                              type="button"
-                              onClick={() => deleteNotice(n.id)}
-                              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/60 transition-colors"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                              <span>{language === 'ar' ? 'حذف' : 'Supprimer'}</span>
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Tab 6 Content: Job Offers Management (لوحة تحكم عروض وفرص الشغل) */}
-            {activeTab === 'jobs' && (
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
-                {/* Header Banner */}
-                <div className="bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-900 rounded-2xl p-5 text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm border border-indigo-900/60">
-                  <div className="flex items-center gap-3.5 text-center sm:text-right">
-                    <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-300 shrink-0">
-                      <Briefcase className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <h3 className="text-base sm:text-lg font-bold">
-                        {language === 'ar' ? 'إدارة ونشر عروض العمل بالدروة' : 'Gestion des Offres d\'Emploi à Deroua'}
-                      </h3>
-                      <p className="text-xs text-indigo-200 mt-0.5">
-                        {language === 'ar'
-                          ? 'نشر عروض تشغيل جديدة مباشرة للموقع، تفعيل أو إيقاف العروض، وحذف العروض المنتهية.'
-                          : 'Publier de nouvelles offres d\'emploi, activer/désactiver et supprimer les annonces expirées.'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setIsAddingNewJob(prev => !prev)}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-all shadow-md shrink-0 active:scale-95"
-                  >
-                    <PlusCircle className="w-4 h-4" />
-                    <span>
-                      {isAddingNewJob 
-                        ? (language === 'ar' ? 'إغلاق نموذج الإضافة' : 'Fermer') 
-                        : (language === 'ar' ? 'نشر عرض عمل جديد الآن' : 'Nouvelle offre d\'emploi')}
-                    </span>
-                  </button>
-                </div>
-
-                {/* Form to Add New Job Offer (Admin Direct Publishing) */}
-                {isAddingNewJob && (
-                  <form 
-                    onSubmit={handleCreateJobByAdmin}
-                    className="p-5 sm:p-6 rounded-2xl border-2 border-indigo-300 dark:border-indigo-800 bg-white dark:bg-slate-800/90 shadow-sm space-y-4 animate-in fade-in duration-200"
-                  >
-                    <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-700">
-                      <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-black text-sm">
-                        <Briefcase className="w-4 h-4" />
-                        <span>{language === 'ar' ? 'بيانات عرض العمل الجديد' : 'Détails du nouveau poste'}</span>
-                      </div>
-                      <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
-                        {language === 'ar' ? 'نشر فوري معتمد' : 'Publication immédiate'}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
-                          {language === 'ar' ? 'المسمى الوظيفي / اسم المهنة *' : 'Intitulé du poste *'}
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={newJobTitle}
-                          onChange={(e) => setNewJobTitle(e.target.value)}
-                          placeholder={language === 'ar' ? 'مثال: مطلوب بائع متجر، معلم جبص، محاسب...' : 'Ex: Vendeur, Plâtrier, Chauffeur...'}
-                          className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
-                          {language === 'ar' ? 'اسم الشركة أو المحل / المشغل *' : 'Entreprise ou Employeur *'}
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={newJobCompany}
-                          onChange={(e) => setNewJobCompany(e.target.value)}
-                          placeholder={language === 'ar' ? 'مثال: سوبرماركت الوفاق، صيدلية السلام، مقهى...' : 'Ex: Société, Magasin, Pharmacie...'}
-                          className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
-                          {language === 'ar' ? 'نوع العقد والعمل' : 'Type de contrat'}
-                        </label>
-                        <select
-                          value={newJobType}
-                          onChange={(e) => setNewJobType(e.target.value as JobType)}
-                          className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        >
-                          <option value="full_time">{language === 'ar' ? 'دوام كامل (Plein temps)' : 'Plein temps'}</option>
-                          <option value="part_time">{language === 'ar' ? 'دوام جزئي (Temps partiel)' : 'Temps partiel'}</option>
-                          <option value="contract">{language === 'ar' ? 'عقد / بالورش (Chantier / Mission)' : 'Contrat'}</option>
-                          <option value="temporary">{language === 'ar' ? 'عمل موسمي / مؤقت' : 'Temporaire'}</option>
-                          <option value="internship">{language === 'ar' ? 'تدريب (Stage)' : 'Stage'}</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
-                          {language === 'ar' ? 'قطاع النشاط' : 'Secteur d\'activité'}
-                        </label>
-                        <input
-                          type="text"
-                          value={newJobSector}
-                          onChange={(e) => setNewJobSector(e.target.value)}
-                          placeholder={language === 'ar' ? 'تجارة، بناء، صحة، حراسة، نقل، مطاعم...' : 'Commerce, BTP, Restauration...'}
-                          className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
-                          {language === 'ar' ? 'الحي بالدروة' : 'Quartier'}
-                        </label>
-                        <select
-                          value={newJobNeighborhood}
-                          onChange={(e) => setNewJobNeighborhood(e.target.value)}
-                          className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        >
-                          <option value="مركز الدروة">مركز الدروة</option>
-                          <option value="حي الوفاق">حي الوفاق</option>
-                          <option value="حي الأمل">حي الأمل</option>
-                          <option value="حي النسيم">حي النسيم</option>
-                          <option value="جنان الدروة">جنان الدروة</option>
-                          <option value="حي القصبة">حي القصبة</option>
-                          <option value="المنطقة الصناعية / النواحي">المنطقة الصناعية / النواحي</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
-                          {language === 'ar' ? 'العنوان بالتفصيل' : 'Adresse précise'}
-                        </label>
-                        <input
-                          type="text"
-                          value={newJobLocation}
-                          onChange={(e) => setNewJobLocation(e.target.value)}
-                          placeholder={language === 'ar' ? 'شارع محمد السادس، قرب المسجد الكبير...' : 'Avenue Mohammed VI...'}
-                          className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
-                          {language === 'ar' ? 'هاتف الاتصال أو الواتساب' : 'Téléphone ou WhatsApp'}
-                        </label>
-                        <input
-                          type="tel"
-                          value={newJobPhone}
-                          onChange={(e) => setNewJobPhone(e.target.value)}
-                          placeholder="06XXXXXXXX"
-                          className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
-                          {language === 'ar' ? 'الراتب أو المقابل (اختياري)' : 'Rémunération (Optionnel)'}
-                        </label>
-                        <input
-                          type="text"
-                          value={newJobSalary}
-                          onChange={(e) => setNewJobSalary(e.target.value)}
-                          placeholder={language === 'ar' ? 'مثال: 3500 درهم، محفز، حسب الخبرة...' : 'Ex: 4000 DH, négociable...'}
-                          className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
-                        {language === 'ar' ? 'وصف المهام والعمل المطلوب' : 'Description du travail'}
-                      </label>
-                      <textarea
-                        rows={2}
-                        value={newJobDescription}
-                        onChange={(e) => setNewJobDescription(e.target.value)}
-                        placeholder={language === 'ar' ? 'تفاصيل الوظيفة، ساعات العمل، والمسؤوليات...' : 'Missions et responsabilités...'}
-                        className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
-                          {language === 'ar' ? 'الشروط المطلوبة (اختياري)' : 'Profil recherché'}
-                        </label>
-                        <input
-                          type="text"
-                          value={newJobRequirements}
-                          onChange={(e) => setNewJobRequirements(e.target.value)}
-                          placeholder={language === 'ar' ? 'خبرة، سكن بالدروة، دبلوم...' : 'Expérience, résidence à Deroua...'}
-                          className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
-                          {language === 'ar' ? 'البريد الإلكتروني للتوظيف (اختياري)' : 'Email de contact'}
-                        </label>
-                        <input
-                          type="email"
-                          value={newJobEmail}
-                          onChange={(e) => setNewJobEmail(e.target.value)}
-                          placeholder="derouaservices@gmail.com"
-                          className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3 pt-1">
-                      <label className="flex items-center gap-2 cursor-pointer select-none">
-                        <input
-                          type="checkbox"
-                          checked={newJobFeatured}
-                          onChange={(e) => setNewJobFeatured(e.target.checked)}
-                          className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4"
-                        />
-                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                          <span>{language === 'ar' ? 'تمييز العرض في أعلى القائمة (Featured)' : 'Mettre en vedette'}</span>
-                        </span>
-                      </label>
-                    </div>
-
-                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-700">
-                      <button
-                        type="button"
-                        onClick={() => setIsAddingNewJob(false)}
-                        className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors"
-                      >
-                        {language === 'ar' ? 'إلغاء' : 'Annuler'}
-                      </button>
-                      <button
-                        type="submit"
-                        className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 shadow-md transition-all active:scale-95 flex items-center gap-1.5"
-                      >
-                        <Check className="w-4 h-4" />
-                        <span>{language === 'ar' ? 'نشر عرض العمل الآن' : 'Publier immédiatement'}</span>
-                      </button>
-                    </div>
-                  </form>
-                )}
-
-                {/* Filter & Search Bar */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-850 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                  <div className="relative w-full sm:w-72">
-                    <Search className="w-4 h-4 text-slate-400 absolute start-3 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      value={jobSearch}
-                      onChange={(e) => setJobSearch(e.target.value)}
-                      placeholder={language === 'ar' ? 'ابحث في العروض...' : 'Filtrer les offres...'}
-                      className="w-full ps-9 pe-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white"
-                    />
-                  </div>
-
-                  <div className="w-full sm:w-auto flex items-center gap-2">
-                    <select
-                      value={jobTypeFilter}
-                      onChange={(e) => setJobTypeFilter(e.target.value)}
-                      className="px-3 py-1.5 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200"
-                    >
-                      <option value="all">{language === 'ar' ? 'كل أنواع العقود' : 'Tous types'}</option>
-                      <option value="full_time">{language === 'ar' ? 'دوام كامل' : 'Plein temps'}</option>
-                      <option value="part_time">{language === 'ar' ? 'دوام جزئي' : 'Temps partiel'}</option>
-                      <option value="contract">{language === 'ar' ? 'عقد / بالورش' : 'Contrat'}</option>
-                      <option value="temporary">{language === 'ar' ? 'مؤقت' : 'Temporaire'}</option>
-                      <option value="internship">{language === 'ar' ? 'تدريب' : 'Stage'}</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Jobs Management List */}
-                {filteredJobs.length === 0 ? (
-                  <div className="py-12 text-center bg-white dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
-                    <Briefcase className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-                    <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
-                      {language === 'ar' ? 'لا توجد عروض عمل مطابقة' : 'Aucune offre trouvée'}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {filteredJobs.map((job) => (
-                      <div
-                        key={job.id}
-                        className={`p-4 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-start justify-between gap-3 ${
-                          job.isActive 
-                            ? 'bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-800' 
-                            : 'bg-slate-50/60 dark:bg-slate-900/60 border-slate-200/60 dark:border-slate-800/40 opacity-70'
-                        }`}
-                      >
-                        <div className="space-y-1.5 flex-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                              job.isActive 
-                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' 
-                                : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
-                            }`}>
-                              {job.isActive ? (language === 'ar' ? 'نشط ومعروض' : 'Actif') : (language === 'ar' ? 'متوقف مؤقتاً' : 'Suspendu')}
-                            </span>
-
-                            {job.featured && (
-                              <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                                {language === 'ar' ? 'مميز' : 'En vedette'}
-                              </span>
-                            )}
-
-                            <span className="text-[11px] text-slate-400 font-medium">
-                              {job.sector[language] || job.sector.ar}
-                            </span>
-                          </div>
-
-                          <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-                            {job.title[language] || job.title.ar}
-                          </h4>
-
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
-                            <span className="font-semibold text-slate-700 dark:text-slate-300">
-                              🏢 {job.company[language] || job.company.ar}
-                            </span>
-                            <span>📍 {job.location[language] || job.location.ar}</span>
-                            {job.phone && <span>📞 {job.phone}</span>}
-                            {job.salary && <span className="text-emerald-600 dark:text-emerald-400 font-semibold">💰 {job.salary[language] || job.salary.ar}</span>}
-                          </div>
-
-                          <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 pt-0.5">
-                            {job.description[language] || job.description.ar}
-                          </p>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex items-center gap-2 shrink-0 self-end sm:self-start">
-                          <button
-                            type="button"
-                            onClick={() => toggleJobStatus(job.id)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                              job.isActive
-                                ? 'bg-amber-50 hover:bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:hover:bg-amber-900/60'
-                                : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60'
-                            }`}
-                          >
-                            {job.isActive 
-                              ? (language === 'ar' ? 'إيقاف مؤقت' : 'Désactiver') 
-                              : (language === 'ar' ? 'تفعيل' : 'Activer')}
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (confirm(language === 'ar' ? 'هل أنت متأكد من حذف هذا العرض نهائياً؟' : 'Supprimer définitivement cette offre ?')) {
-                                deleteJobOffer(job.id);
-                              }
-                            }}
-                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/60 transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            <span>{language === 'ar' ? 'حذف' : 'Supprimer'}</span>
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         )}
       </div>
     </div>
   );
 };
-

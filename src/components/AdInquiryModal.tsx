@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Megaphone, Send, CheckCircle2, Mail, Phone, Building, Calendar, Image as ImageIcon, Link as LinkIcon } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Megaphone, Send, CheckCircle2, MessageSquare, Phone, Building, Calendar, Image as ImageIcon, Link as LinkIcon } from 'lucide-react';
 import { useApp } from '../context/AppContext.tsx';
 
 export const AdInquiryModal: React.FC = () => {
@@ -14,8 +14,10 @@ export const AdInquiryModal: React.FC = () => {
   const [imageFile, setImageFile] = useState<File | undefined>(undefined);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
+  useEffect(() => () => { if (imagePreview) URL.revokeObjectURL(imagePreview); }, [imagePreview]);
   if (!isAdInquiryModalOpen) return null;
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,6 +39,8 @@ export const AdInquiryModal: React.FC = () => {
       return;
     }
 
+    if (isSubmitting) return;
+    setSubmitError('');
     setIsSubmitting(true);
     try {
       await submitAdInquiry({
@@ -52,13 +56,24 @@ export const AdInquiryModal: React.FC = () => {
 
       setSubmitted(true);
     } catch {
-      showToast(language === 'ar' ? 'حدث خطأ أثناء إرسال الطلب' : 'Erreur lors de l\'envoi');
+      setSubmitError(language === 'ar' ? 'لم يتم إرسال الطلب. احتفظنا ببيانات النموذج؛ تحقق من الاتصال وأعد المحاولة.' : language === 'fr' ? 'Demande non envoyée. Vos données sont conservées; réessayez.' : 'Request was not sent. Your form is preserved; check your connection and retry.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const AD_ADMIN_EMAIL = 'derouaservices@gmail.com';
+  const AD_ADMIN_PHONE = '0649414261';
+  const AD_ADMIN_PHONE_DISPLAY = '06 49 41 42 61';
+  const AD_ADMIN_WHATSAPP = '212649414261';
+
+  const handleDirectWhatsApp = () => {
+    const text = encodeURIComponent(
+      language === 'ar'
+        ? `السلام عليكم، أود حجز مساحة إعلانية على موقع خدمات الدروة derouaservices.ma:\n- اسم النشاط/المشروع: ${businessName || 'غير محدد بعد'}\n- رقم الهاتف للتواصل: ${phone || 'غير محدد'}\n- مدة الإشهار: ${duration}\n- ملاحظات: ${notes || 'لا توجد'}`
+        : `Bonjour, je souhaite réserver un espace publicitaire sur derouaservices.ma:\n- Projet: ${businessName || 'Non spécifié'}\n- Téléphone: ${phone || ''}\n- Durée: ${duration}\n- Notes: ${notes || 'Aucune'}`
+    );
+    window.open(`https://wa.me/${AD_ADMIN_WHATSAPP}?text=${text}`, '_blank');
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto animate-in fade-in duration-200">
@@ -113,24 +128,32 @@ export const AdInquiryModal: React.FC = () => {
             {/* Direct Admin Ad Contact Box */}
             <div className="p-3.5 rounded-2xl bg-amber-500/10 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-center space-y-1.5 max-w-sm mx-auto">
               <span className="text-[11px] font-semibold text-amber-900 dark:text-amber-300 block">
-                {language === 'ar' ? 'البريد الإلكتروني المخصص لتلقي وتأكيد طلبات الإعلانات:' : 'Email dédié pour la réservation publicitaire :'}
+                {language === 'ar' ? 'الرقم المخصص لتلقي طلبات الإعلانات:' : 'Numéro direct réservations publicitaires :'}
               </span>
               <a 
-                href={`mailto:${AD_ADMIN_EMAIL}`}
-                className="text-base font-black text-slate-900 dark:text-white font-mono tracking-wide hover:text-amber-600 transition-colors inline-block break-all"
+                href={`tel:${AD_ADMIN_PHONE}`}
+                className="text-lg font-black text-slate-900 dark:text-white font-mono tracking-wider hover:text-amber-600 transition-colors inline-block"
                 dir="ltr"
               >
-                {AD_ADMIN_EMAIL}
+                {AD_ADMIN_PHONE_DISPLAY}
               </a>
             </div>
 
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={handleDirectWhatsApp}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-2 transition-colors shadow-xs"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span>{language === 'ar' ? 'إرسال التفاصيل عبر واتساب' : 'Envoyer sur WhatsApp'}</span>
+              </button>
               <a
-                href={`mailto:${AD_ADMIN_EMAIL}?subject=${encodeURIComponent(language === 'ar' ? 'طلب حجز مساحة إعلانية - الدروة خدمات' : 'Demande réservation espace publicitaire - Deroua Services')}`}
+                href={`tel:${AD_ADMIN_PHONE}`}
                 className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs flex items-center justify-center gap-2 transition-colors shadow-xs"
               >
-                <Mail className="w-4 h-4" />
-                <span>{language === 'ar' ? 'مراسلة عبر البريد الإلكتروني' : 'Envoyer un Email'}</span>
+                <Phone className="w-4 h-4" />
+                <span>{language === 'ar' ? 'اتصال مباشر' : 'Appeler'}</span>
               </a>
               <button
                 type="button"
@@ -146,31 +169,35 @@ export const AdInquiryModal: React.FC = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
+            {submitError && <p role="alert" className="text-red-600">{submitError}</p>}
             {/* Quick Admin Contact Bar */}
             <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 flex items-center justify-between flex-wrap gap-2 text-xs">
               <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                <Phone className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
                 <div>
                   <span className="font-bold text-slate-900 dark:text-white">
-                    {language === 'ar' ? 'بريد حجز وتأكيد الإعلانات:' : 'Email de réservation :'}
+                    {language === 'ar' ? 'هاتف وواتساب حجز الإعلانات:' : 'Tél & WhatsApp résa :'}
                   </span>{' '}
-                  <a
-                    href={`mailto:${AD_ADMIN_EMAIL}`}
-                    className="font-mono font-black text-amber-700 dark:text-amber-400 hover:underline"
-                    dir="ltr"
-                  >
-                    {AD_ADMIN_EMAIL}
-                  </a>
+                  <span className="font-mono font-black text-amber-700 dark:text-amber-400" dir="ltr">
+                    {AD_ADMIN_PHONE_DISPLAY}
+                  </span>
                 </div>
               </div>
               <div className="flex items-center gap-1.5">
                 <a
-                  href={`mailto:${AD_ADMIN_EMAIL}?subject=${encodeURIComponent(language === 'ar' ? 'استفسار حجز إعلان - الدروة' : 'Demande d\'information publicité')}`}
-                  className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-[11px] font-bold transition-colors flex items-center gap-1.5"
+                  href={`tel:${AD_ADMIN_PHONE}`}
+                  className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold hover:bg-slate-50 transition-colors"
                 >
-                  <Mail className="w-3.5 h-3.5" />
-                  <span>{language === 'ar' ? 'مراسلة الإدارة' : 'Écrire un email'}</span>
+                  {language === 'ar' ? 'اتصال' : 'Appel'}
                 </a>
+                <button
+                  type="button"
+                  onClick={handleDirectWhatsApp}
+                  className="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-[11px] font-bold hover:bg-emerald-500 transition-colors flex items-center gap-1"
+                >
+                  <MessageSquare className="w-3 h-3" />
+                  <span>WhatsApp</span>
+                </button>
               </div>
             </div>
 
@@ -318,13 +345,14 @@ export const AdInquiryModal: React.FC = () => {
 
             {/* Footer Buttons */}
             <div className="pt-2 flex items-center justify-between gap-3">
-              <a
-                href={`mailto:${AD_ADMIN_EMAIL}?subject=${encodeURIComponent(language === 'ar' ? 'طلب مساحة إعلانية - الدروة' : 'Demande publicité Deroua')}`}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors"
+              <button
+                type="button"
+                onClick={handleDirectWhatsApp}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-colors"
               >
-                <Mail className="w-4 h-4 text-amber-500" />
-                <span>{language === 'ar' ? 'مراسلة عبر البريد' : 'Contact Email'}</span>
-              </a>
+                <MessageSquare className="w-4 h-4" />
+                <span>{language === 'ar' ? 'واتساب فوري' : 'WhatsApp'}</span>
+              </button>
 
               <button
                 type="submit"

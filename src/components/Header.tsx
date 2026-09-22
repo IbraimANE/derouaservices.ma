@@ -8,8 +8,7 @@ import {
   X, 
   WifiOff, 
   Info,
-  ShieldCheck,
-  HeartPulse
+  ShieldCheck
 } from 'lucide-react';
 import { useApp } from '../context/AppContext.tsx';
 import { Language } from '../types.ts';
@@ -31,7 +30,6 @@ export const Header: React.FC = () => {
     setIsAboutModalOpen,
     setIsAdminModalOpen,
     isAdminAuthenticated,
-    setIsPharmacyModalOpen,
     isOffline
   } = useApp();
 
@@ -117,24 +115,6 @@ export const Header: React.FC = () => {
                   {favorites.length}
                 </span>
               )}
-            </button>
-
-            {/* Guard Pharmacy Quick Button */}
-            <button
-              id="header-guard-pharmacy-btn"
-              type="button"
-              onClick={() => setIsPharmacyModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold transition-all shadow-2xs"
-              title={language === 'ar' ? 'صيدلية الحراسة' : 'Pharmacie de garde'}
-            >
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <HeartPulse className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span className="hidden sm:inline">
-                {language === 'ar' ? 'صيدلية الحراسة' : 'Pharmacie de garde'}
-              </span>
             </button>
 
             {/* Add service button (Web friendly) */}

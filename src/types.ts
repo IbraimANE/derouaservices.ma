@@ -30,13 +30,17 @@ export interface ServiceItem {
   isOpenNow?: boolean;
   isEmergency?: boolean;
   isGuardPharmacy?: boolean;
+  guardStartsAt?: string;
+  guardEndsAt?: string;
+  guardSource?: string;
+  guardVerifiedAt?: string;
+  status?: 'pending' | 'approved' | 'rejected';
   rating?: number;
   reviewsCount?: number;
   verified: boolean;
   description?: LocalizedString;
   workingHours?: LocalizedString;
   mapQuery?: string;
-  coordinates?: { lat: number; lng: number };
   isUserSubmitted?: boolean;
   createdAt?: string;
 }
@@ -71,9 +75,6 @@ export interface NoticeItem {
   isUrgent?: boolean;
   author: LocalizedString;
   iconName?: string;
-  imageUrl?: string;
-  externalLink?: string;
-  createdAt?: string;
 }
 
 export interface TransportRoute {
@@ -86,27 +87,4 @@ export interface TransportRoute {
   station: LocalizedString;
   frequency: LocalizedString;
   operatingHours: LocalizedString;
-}
-
-export type JobType = 'full_time' | 'part_time' | 'contract' | 'temporary' | 'internship';
-
-export interface JobOffer {
-  id: string;
-  title: LocalizedString;
-  company: LocalizedString;
-  sector: LocalizedString;
-  jobType: JobType;
-  location: LocalizedString;
-  neighborhood: LocalizedString;
-  description: LocalizedString;
-  requirements?: LocalizedString;
-  salary?: LocalizedString;
-  phone?: string;
-  whatsapp?: string;
-  email?: string;
-  howToApply?: LocalizedString;
-  deadline?: string;
-  createdAt?: string;
-  isActive: boolean;
-  featured?: boolean;
 }
