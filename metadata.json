@@ -1,0 +1,6 @@
+{
+  "name": "Deroua Services",
+  "description": "دليل وخدمات مدينة الدروة والنواحي (إقليم برشيد). أرقام الطوارئ، صيدليات الحراسة، الإدارات، النقل، ودليل الحرفيين والأنشطة التجارية.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

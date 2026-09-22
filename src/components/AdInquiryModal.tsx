@@ -1,0 +1,352 @@
+import React, { useState } from 'react';
+import { X, Megaphone, Send, CheckCircle2, Mail, Phone, Building, Calendar, Image as ImageIcon, Link as LinkIcon } from 'lucide-react';
+import { useApp } from '../context/AppContext.tsx';
+
+export const AdInquiryModal: React.FC = () => {
+  const { language, isAdInquiryModalOpen, setIsAdInquiryModalOpen, showToast, submitAdInquiry } = useApp();
+
+  const [businessName, setBusinessName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [category, setCategory] = useState('real_estate');
+  const [duration, setDuration] = useState('1_month');
+  const [notes, setNotes] = useState('');
+  const [link, setLink] = useState('');
+  const [imageFile, setImageFile] = useState<File | undefined>(undefined);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  if (!isAdInquiryModalOpen) return null;
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        showToast(language === 'ar' ? 'حجم الصورة يجب ألا يتجاوز 5 ميغابايت' : 'Taille max: 5Mo');
+        return;
+      }
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!businessName.trim() || !phone.trim()) {
+      showToast(language === 'ar' ? 'يرجى إدخال اسم النشاط ورقم الهاتف' : 'Veuillez remplir les champs obligatoires');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await submitAdInquiry({
+        businessName: businessName.trim(),
+        phone: phone.trim(),
+        whatsapp: phone.trim(),
+        category,
+        duration,
+        notes: notes.trim(),
+        link: link.trim() || undefined,
+        imageFile: imageFile
+      });
+
+      setSubmitted(true);
+    } catch {
+      showToast(language === 'ar' ? 'حدث خطأ أثناء إرسال الطلب' : 'Erreur lors de l\'envoi');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const AD_ADMIN_EMAIL = 'derouaservices@gmail.com';
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto animate-in fade-in duration-200">
+      <div 
+        id="ad-inquiry-modal-container"
+        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl max-h-[92vh] flex flex-col"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-amber-500/10 dark:bg-amber-950/20 shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center">
+              <Megaphone className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                {language === 'ar' ? 'حجز مساحة إعلانية في الدروة' : 'Espace Publicitaire Deroua'}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {language === 'ar' ? 'عزز وصول مشروعك لآلاف الزوار المحليين' : 'Visibilité maximale pour votre commerce'}
+              </p>
+            </div>
+          </div>
+
+          <button
+            id="ad-modal-close-btn"
+            type="button"
+            onClick={() => {
+              setIsAdInquiryModalOpen(false);
+              setSubmitted(false);
+            }}
+            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Content */}
+        {submitted ? (
+          <div className="p-6 sm:p-8 text-center space-y-4 overflow-y-auto">
+            <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 mx-auto flex items-center justify-center shadow-xs">
+              <CheckCircle2 className="w-8 h-8" />
+            </div>
+            <h4 className="text-lg font-bold text-slate-900 dark:text-white">
+              {language === 'ar' ? 'تم استلام طلب حجز المساحة الإعلانية بنجاح' : 'Demande enregistrée avec succès'}
+            </h4>
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed max-w-sm mx-auto">
+              {language === 'ar'
+                ? 'شكراً لكم. طلبكم مسجل في قاعدة البيانات وبانتظار تفعيل الإدارة. لتأكيد وتفعيل الإعلان سريعاً، يمكنكم التواصل عبر الرقم المخصص:'
+                : 'Merci. Votre demande est enregistrée. Pour une activation rapide, contactez directement le numéro dédié :'}
+            </p>
+
+            {/* Direct Admin Ad Contact Box */}
+            <div className="p-3.5 rounded-2xl bg-amber-500/10 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-center space-y-1.5 max-w-sm mx-auto">
+              <span className="text-[11px] font-semibold text-amber-900 dark:text-amber-300 block">
+                {language === 'ar' ? 'البريد الإلكتروني المخصص لتلقي وتأكيد طلبات الإعلانات:' : 'Email dédié pour la réservation publicitaire :'}
+              </span>
+              <a 
+                href={`mailto:${AD_ADMIN_EMAIL}`}
+                className="text-base font-black text-slate-900 dark:text-white font-mono tracking-wide hover:text-amber-600 transition-colors inline-block break-all"
+                dir="ltr"
+              >
+                {AD_ADMIN_EMAIL}
+              </a>
+            </div>
+
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-2">
+              <a
+                href={`mailto:${AD_ADMIN_EMAIL}?subject=${encodeURIComponent(language === 'ar' ? 'طلب حجز مساحة إعلانية - الدروة خدمات' : 'Demande réservation espace publicitaire - Deroua Services')}`}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs flex items-center justify-center gap-2 transition-colors shadow-xs"
+              >
+                <Mail className="w-4 h-4" />
+                <span>{language === 'ar' ? 'مراسلة عبر البريد الإلكتروني' : 'Envoyer un Email'}</span>
+              </a>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAdInquiryModalOpen(false);
+                  setSubmitted(false);
+                }}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold"
+              >
+                {language === 'ar' ? 'إغلاق' : 'Fermer'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
+            {/* Quick Admin Contact Bar */}
+            <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 flex items-center justify-between flex-wrap gap-2 text-xs">
+              <div className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                <div>
+                  <span className="font-bold text-slate-900 dark:text-white">
+                    {language === 'ar' ? 'بريد حجز وتأكيد الإعلانات:' : 'Email de réservation :'}
+                  </span>{' '}
+                  <a
+                    href={`mailto:${AD_ADMIN_EMAIL}`}
+                    className="font-mono font-black text-amber-700 dark:text-amber-400 hover:underline"
+                    dir="ltr"
+                  >
+                    {AD_ADMIN_EMAIL}
+                  </a>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <a
+                  href={`mailto:${AD_ADMIN_EMAIL}?subject=${encodeURIComponent(language === 'ar' ? 'استفسار حجز إعلان - الدروة' : 'Demande d\'information publicité')}`}
+                  className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-[11px] font-bold transition-colors flex items-center gap-1.5"
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>{language === 'ar' ? 'مراسلة الإدارة' : 'Écrire un email'}</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Business Name */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                {language === 'ar' ? 'اسم المشروع / المحل أو الخدمة *' : 'Nom du projet / commerce *'}
+              </label>
+              <div className="relative">
+                <Building className="w-4 h-4 absolute left-3 rtl:right-3 rtl:left-auto top-3 text-slate-400" />
+                <input
+                  type="text"
+                  required
+                  value={businessName}
+                  onChange={(e) => setBusinessName(e.target.value)}
+                  placeholder={language === 'ar' ? 'مثال: إقامات النخيل، مطعم الدروة، وكالة كراء...' : 'Ex: Résidence Anakhil, Garage Auto...'}
+                  className="w-full pl-9 pr-4 rtl:pr-9 rtl:pl-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Phone & Duration */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  {language === 'ar' ? 'رقم الهاتف أو الواتساب *' : 'Téléphone ou WhatsApp *'}
+                </label>
+                <div className="relative">
+                  <Phone className="w-4 h-4 absolute left-3 rtl:right-3 rtl:left-auto top-3 text-slate-400" />
+                  <input
+                    type="tel"
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="06XXXXXXXX"
+                    className="w-full pl-9 pr-4 rtl:pr-9 rtl:pl-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none font-mono"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  {language === 'ar' ? 'مدة الإشهار المطلوبة' : 'Durée souhaitée'}
+                </label>
+                <div className="relative">
+                  <Calendar className="w-4 h-4 absolute left-3 rtl:right-3 rtl:left-auto top-3 text-slate-400" />
+                  <select
+                    value={duration}
+                    onChange={(e) => setDuration(e.target.value)}
+                    className="w-full pl-9 pr-4 rtl:pr-9 rtl:pl-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none"
+                  >
+                    <option value="1_month">{language === 'ar' ? 'شهر واحد' : '1 mois'}</option>
+                    <option value="3_months">{language === 'ar' ? '3 أشهر (تخفيض خاص)' : '3 mois'}</option>
+                    <option value="6_months">{language === 'ar' ? '6 أشهر' : '6 mois'}</option>
+                    <option value="1_year">{language === 'ar' ? 'سنة كاملة (شريك رسمي)' : '1 an (Partenaire)'}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Category */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                {language === 'ar' ? 'تصنيف النشاط' : 'Secteur'}
+              </label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none"
+              >
+                <option value="real_estate">{language === 'ar' ? 'عقارات وإقامات سكنية' : 'Immobilier & Résidences'}</option>
+                <option value="auto">{language === 'ar' ? 'سيارات، كراء، وفحص تقني' : 'Automobile & Location'}</option>
+                <option value="food">{language === 'ar' ? 'مطاعم، مقاهي، وتغذية' : 'Restaurants & Cafés'}</option>
+                <option value="health">{language === 'ar' ? 'صحة، مختبرات، وعيادات' : 'Santé & Laboratoires'}</option>
+                <option value="service">{language === 'ar' ? 'خدمات، تجارة، ومهن حرة' : 'Commerces & Services'}</option>
+              </select>
+            </div>
+
+            {/* Optional Image Upload */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                {language === 'ar' ? 'صورة أو بانر الإعلان (اختياري)' : 'Image ou Affiche publicitaire (Optionnel)'}
+              </label>
+              <div className="flex items-center gap-3">
+                <label className="flex-1 cursor-pointer flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-xs text-slate-600 dark:text-slate-300">
+                  <ImageIcon className="w-4 h-4 text-amber-500" />
+                  <span>
+                    {imageFile ? imageFile.name : (language === 'ar' ? 'اختر صورة أو ملصق الإعلان' : 'Choisir une image')}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                </label>
+                {imagePreview && (
+                  <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-amber-400 shrink-0">
+                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImageFile(undefined);
+                        setImagePreview(null);
+                      }}
+                      className="absolute top-0 right-0 bg-red-600 text-white p-0.5 rounded-bl text-[9px]"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Optional Link */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                {language === 'ar' ? 'رابط الموقع أو صفحة الفيسبوك/انستغرام (اختياري)' : 'Lien de site web ou page sociale (Optionnel)'}
+              </label>
+              <div className="relative">
+                <LinkIcon className="w-4 h-4 absolute left-3 rtl:right-3 rtl:left-auto top-3 text-slate-400" />
+                <input
+                  type="url"
+                  value={link}
+                  onChange={(e) => setLink(e.target.value)}
+                  placeholder="https://facebook.com/yourpage"
+                  className="w-full pl-9 pr-4 rtl:pr-9 rtl:pl-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Notes / Description */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                {language === 'ar' ? 'ملاحظات أو نص الإعلان المرغوب' : 'Détails ou message de l\'annonce'}
+              </label>
+              <textarea
+                rows={2}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder={language === 'ar' ? 'أضف وصفاً لعرضك أو نص الإعلان المطلوب...' : 'Votre offre spéciale ou texte d\'annonce...'}
+                className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none resize-none"
+              />
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="pt-2 flex items-center justify-between gap-3">
+              <a
+                href={`mailto:${AD_ADMIN_EMAIL}?subject=${encodeURIComponent(language === 'ar' ? 'طلب مساحة إعلانية - الدروة' : 'Demande publicité Deroua')}`}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors"
+              >
+                <Mail className="w-4 h-4 text-amber-500" />
+                <span>{language === 'ar' ? 'مراسلة عبر البريد' : 'Contact Email'}</span>
+              </a>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-bold text-xs transition-colors shadow-md"
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                    <span>{language === 'ar' ? 'جاري الإرسال...' : 'Envoi...'}</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-3.5 h-3.5" />
+                    <span>{language === 'ar' ? 'إرسال الطلب' : 'Envoyer'}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+};
