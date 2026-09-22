@@ -17,9 +17,14 @@ export const db = getFirestore(app);
 export const storage = getStorage(app);
 export const auth = getAuth(app);
 
+const ADMIN_EMAIL = 'ibrahimaitaddimane@gmail.com';
+
 export async function hasAdminRole(): Promise<boolean> {
   await auth.authStateReady();
-  return !!auth.currentUser && (await getIdTokenResult(auth.currentUser)).claims.admin === true;
+  if (!auth.currentUser) return false;
+  const token = await getIdTokenResult(auth.currentUser);
+  return token.claims.admin === true ||
+    (auth.currentUser.emailVerified && auth.currentUser.email?.toLowerCase() === ADMIN_EMAIL);
 }
 
 async function requireAdmin() {
