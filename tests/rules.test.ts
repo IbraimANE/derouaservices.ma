@@ -64,3 +64,19 @@ it('restricts image uploads to the owner, accepted types and size limit', async 
   await assertFails(uploadBytes(ref(storage, 'ads/visitor/c/image'), new Uint8Array(10), { contentType: 'text/html' }));
   await assertFails(uploadBytes(ref(storage, 'ads/visitor/d/image'), new Uint8Array(5 * 1024 * 1024 + 1), { contentType: 'image/png' }));
 });
+
+it('publishes jobs only through an administrator and hides inactive jobs', async () => {
+  const publicDb = env.unauthenticatedContext().firestore();
+  const visitorDb = env.authenticatedContext('visitor').firestore();
+  const adminDb = env.authenticatedContext('moderator', { admin: true }).firestore();
+  const job = { title: loc, company: loc, sector: loc, jobType: 'full_time', location: loc,
+    neighborhood: loc, description: loc, isActive: true, createdAt: serverTimestamp() };
+  await assertFails(setDoc(doc(visitorDb, 'jobs/forged'), job));
+  await assertSucceeds(setDoc(doc(adminDb, 'jobs/public'), job));
+  await assertSucceeds(getDoc(doc(publicDb, 'jobs/public')));
+  await assertSucceeds(setDoc(doc(adminDb, 'jobs/private'), { ...job, isActive: false }));
+  await assertFails(getDoc(doc(publicDb, 'jobs/private')));
+  await assertFails(getDocs(collection(publicDb, 'jobs')));
+  const result = await assertSucceeds(getDocs(query(collection(publicDb, 'jobs'), where('isActive', '==', true))));
+  expect(result.size).toBe(1);
+});
