@@ -2,13 +2,14 @@ import React from 'react';
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 const fake = vi.hoisted(() => ({
-  services: vi.fn(), ads: vi.fn(), createService: vi.fn(), createAd: vi.fn(),
+  services: vi.fn(), ads: vi.fn(), jobs: vi.fn(), createService: vi.fn(), createAd: vi.fn(),
   admin: false, listener: null as null | ((user: unknown) => Promise<void>)
 }));
 vi.mock('../src/lib/firebase', () => ({
   auth: {}, hasAdminRole: vi.fn(async () => fake.admin),
   servicesApi: { getAll: fake.services, create: fake.createService },
-  advertisementsApi: { getAll: fake.ads, create: fake.createAd }
+  advertisementsApi: { getAll: fake.ads, create: fake.createAd },
+  jobsApi: { getAll: fake.jobs }
 }));
 vi.mock('firebase/auth', () => ({
   onIdTokenChanged: (_auth: unknown, callback: (user: unknown) => Promise<void>) => {
@@ -23,6 +24,7 @@ beforeEach(() => {
   localStorage.clear(); sessionStorage.clear(); fake.admin = false;
   fake.services.mockReset().mockResolvedValue([]);
   fake.ads.mockReset().mockResolvedValue([]);
+  fake.jobs.mockReset().mockResolvedValue([]);
   fake.createService.mockReset(); fake.createAd.mockReset();
 });
 afterEach(cleanup);

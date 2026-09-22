@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { onIdTokenChanged, signInWithEmailAndPassword, signOut, getIdTokenResult } from 'firebase/auth';
-import { Language, ServiceCategory, ServiceItem, AdvertisementItem } from '../types';
+import { Language, ServiceCategory, ServiceItem, AdvertisementItem, JobOffer } from '../types';
 import { INITIAL_SERVICES, APP_TRANSLATIONS } from '../data/derouaData';
-import { auth, hasAdminRole, servicesApi, advertisementsApi } from '../lib/firebase';
+import { auth, hasAdminRole, servicesApi, advertisementsApi, jobsApi } from '../lib/firebase';
 import { isPublishedService, isPublishedAdvertisement, isCurrentGuardPharmacy } from '../lib/servicePolicy';
 
 interface AppContextType {
@@ -48,6 +48,7 @@ interface AppContextType {
   loginAdmin: (email: string, password: string) => Promise<boolean>;
   logoutAdmin: () => Promise<void>;
   advertisements: AdvertisementItem[];
+  jobs: JobOffer[];
   approvedAdvertisements: AdvertisementItem[];
   approveAdvertisement: (id: string) => Promise<void>;
   rejectAdvertisement: (id: string) => Promise<void>;
@@ -96,6 +97,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
   const [remoteServices, setRemoteServices] = useState<ServiceItem[]>([]);
   const [advertisements, setAdvertisements] = useState<AdvertisementItem[]>([]);
+  const [jobs, setJobs] = useState<JobOffer[]>([]);
   const [isAdminAuthenticated, setAdminAuthenticated] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -132,12 +134,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsSyncing(true);
     try {
       const admin = await hasAdminRole();
-      const [servicesResult, adsResult] = await Promise.all([
-        servicesApi.getAll(admin), advertisementsApi.getAll(admin)
+      const [servicesResult, adsResult, jobsResult] = await Promise.all([
+        servicesApi.getAll(admin), advertisementsApi.getAll(admin),
+        (jobsApi?.getAll?.(admin) ?? Promise.resolve([])).catch(() => [])
       ]);
       if (version !== requestVersion.current) return;
       setRemoteServices(servicesResult);
       setAdvertisements(adsResult);
+      setJobs(jobsResult);
     } catch {
       if (version !== requestVersion.current) return;
       showToast({
@@ -159,6 +163,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setAdminAuthenticated(false);
       setRemoteServices([]);
       setAdvertisements([]);
+      setJobs([]);
       try {
         const admin = !!user && (await getIdTokenResult(user)).claims.admin === true;
         if (!active || current !== revision) return;
@@ -284,7 +289,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     searchQuery, setSearchQuery, selectedCategory, setSelectedCategory, selectedNeighborhood, setSelectedNeighborhood,
     onlyOpenNow, setOnlyOpenNow, onlyEmergency, setOnlyEmergency, isOffline, isSyncing, refreshData, toastMessage, showToast,
     isAddModalOpen, setIsAddModalOpen, isPrivacyModalOpen, setIsPrivacyModalOpen, isAboutModalOpen, setIsAboutModalOpen,
-    isAdminModalOpen, setIsAdminModalOpen, isAdminAuthenticated, loginAdmin, logoutAdmin, advertisements,
+    isAdminModalOpen, setIsAdminModalOpen, isAdminAuthenticated, loginAdmin, logoutAdmin, advertisements, jobs,
     approvedAdvertisements, approveAdvertisement, rejectAdvertisement, toggleAdApproval, deleteAdvertisement,
     addAdvertisement, submitAdInquiry, isAdInquiryModalOpen, setIsAdInquiryModalOpen,
     isFavoritesView, setIsFavoritesView, resetAllFilters

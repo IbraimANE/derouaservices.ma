@@ -77,6 +77,29 @@ export interface NoticeItem {
   iconName?: string;
 }
 
+export type JobType = 'full_time' | 'part_time' | 'contract' | 'temporary' | 'internship';
+
+export interface JobOffer {
+  id: string;
+  title: LocalizedString;
+  company: LocalizedString;
+  sector: LocalizedString;
+  jobType: JobType;
+  location: LocalizedString;
+  neighborhood: LocalizedString;
+  description: LocalizedString;
+  requirements?: LocalizedString;
+  salary?: LocalizedString;
+  phone?: string;
+  whatsapp?: string;
+  email?: string;
+  howToApply?: LocalizedString;
+  deadline?: string;
+  createdAt?: string;
+  isActive: boolean;
+  featured?: boolean;
+}
+
 export interface TransportRoute {
   id: string;
   from: LocalizedString;

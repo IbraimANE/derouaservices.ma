@@ -61,6 +61,20 @@ service cloud.firestore {
         (!('link' in request.resource.data) || request.resource.data.link.matches('https?://.*'));
       allow update, delete: if admin();
     }
+    match /jobs/{id} {
+      allow read: if admin() || resource.data.isActive == true;
+      allow create, update: if admin() &&
+        request.resource.data.keys().hasAll([
+          'title', 'company', 'sector', 'jobType', 'location', 'neighborhood',
+          'description', 'isActive', 'createdAt'
+        ]) &&
+        localized(request.resource.data.title) && localized(request.resource.data.company) &&
+        localized(request.resource.data.sector) && localized(request.resource.data.location) &&
+        localized(request.resource.data.neighborhood) && localized(request.resource.data.description) &&
+        request.resource.data.jobType in ['full_time', 'part_time', 'contract', 'temporary', 'internship'] &&
+        request.resource.data.isActive is bool;
+      allow delete: if admin();
+    }
     match /{document=**} {
       allow read, write: if false;
     }
